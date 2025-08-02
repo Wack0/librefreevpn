@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	<Version>$([System.String]::Format('{0}.{1:00}{2:00}.{3:00}{4:00}.0', $([System.DateTime]::UtcNow.Year),$([System.DateTime]::UtcNow.Month),$([System.DateTime]::UtcNow.Day),$([System.DateTime]::UtcNow.Hour),$([System.DateTime]::UtcNow.Minute)))</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ini-parser-netstandard" Version="2.5.2" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>

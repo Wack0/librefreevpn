@@ -1,0 +1,105 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+
+namespace LibFreeVPN
+{
+    /// <summary>
+    /// Base class for a generic multi-provider parser
+    /// </summary>
+    /// <typeparam name="TParser">Object implementing this class</typeparam>
+    public abstract class VPNGenericMultiProviderParser<TParser> : IVPNGenericMultiProviderParser
+        where TParser : VPNGenericMultiProviderParser<TParser>, new()
+    {
+        private static readonly TParser s_Parser = new TParser();
+
+        public abstract IEnumerable<IVPNServer> Parse(string config, IReadOnlyDictionary<string, string> extraRegistry);
+        public static IEnumerable<IVPNServer> ParseConfig(string config)
+        {
+            return ParseConfig(config, new Dictionary<string, string>());
+        }
+
+        public static IEnumerable<IVPNServer> ParseConfig(string config, IReadOnlyDictionary<string, string> extraRegistry)
+        {
+            try
+            {
+                return s_Parser.Parse(config, extraRegistry);
+            }
+            catch { return Enumerable.Empty<IVPNServer>(); }
+        }
+    }
+    /// <summary>
+    /// Base class for a multi-provider parser for a JSON object with an array of servers where 
+    /// </summary>
+    /// <typeparam name="TParser">Object implementing this class</typeparam>
+    public abstract class VPNJsonArrInObjMultiProviderParser<TParser> : VPNGenericMultiProviderParser<TParser>
+        where TParser : VPNJsonArrInObjMultiProviderParser<TParser>, new()
+    {
+        // Base object
+        /// <summary>
+        /// JSON key of the servers array.
+        /// </summary>
+        protected virtual string ServersArrayKey => "Servers";
+
+        /// <summary>
+        /// Decrypt outer ciphertext (entire json object) if required
+        /// </summary>
+        /// <param name="ciphertext">Ciphertext</param>
+        /// <returns>Plaintext</returns>
+        protected virtual string DecryptOuter(string ciphertext) => ciphertext;
+
+        /// <summary>
+        /// Decrypt inner ciphertext (json string value) if required
+        /// </summary>
+        /// <param name="jsonKey">JSON object key</param>
+        /// <param name="ciphertext">Ciphertext</param>
+        /// <returns>Plaintext</returns>
+        protected virtual string DecryptInner(string jsonKey, string ciphertext) => ciphertext;
+
+        protected abstract IEnumerable<IVPNServer> ParseServer(JsonDocument root, JsonElement server, IReadOnlyDictionary<string, string> extraRegistry);
+
+        private JsonElement DecryptServer(JsonElement server)
+        {
+            if (server.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
+            var ret = new JsonObject();
+            foreach (var elem in server.EnumerateObject())
+            {
+                if (elem.Value.ValueKind != JsonValueKind.String)
+                {
+                    ret.Add(elem.Name, JsonObject.Create(elem.Value));
+                    continue;
+                }
+
+                ret.Add(elem.Name, DecryptInner(elem.Name, elem.Value.GetString()));
+            }
+            return JsonDocument.Parse(ret.ToJsonString()).RootElement;
+        }
+
+        private IEnumerable<IVPNServer> TryParseServer(JsonDocument root, JsonElement server, IReadOnlyDictionary<string, string> extraRegistry)
+        {
+            try
+            {
+                return ParseServer(root, DecryptServer(server), extraRegistry);
+            }
+            catch { return Enumerable.Empty<IVPNServer>(); }
+        }
+
+        public override sealed IEnumerable<IVPNServer> Parse(string config, IReadOnlyDictionary<string, string> extraRegistry)
+        {
+            // Decrypt outer ciphertext
+            config = DecryptOuter(config);
+
+            var json = JsonDocument.Parse(config);
+            if (json.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
+
+            if (!json.RootElement.TryGetProperty(ServersArrayKey, out var servers)) throw new InvalidDataException();
+            if (servers.ValueKind != JsonValueKind.Array) throw new InvalidDataException();
+
+            return servers.EnumerateArray().SelectMany((server) => TryParseServer(json, server, extraRegistry)).Distinct();
+        }
+    }
+}
