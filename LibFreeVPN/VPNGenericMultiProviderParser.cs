@@ -27,7 +27,7 @@ namespace LibFreeVPN
         {
             try
             {
-                return s_Parser.Parse(config, extraRegistry);
+                return s_Parser.Parse(config, extraRegistry).Distinct();
             }
             catch { return Enumerable.Empty<IVPNServer>(); }
         }
@@ -70,7 +70,8 @@ namespace LibFreeVPN
             {
                 if (elem.Value.ValueKind != JsonValueKind.String)
                 {
-                    ret.Add(elem.Name, JsonObject.Create(elem.Value));
+                    // BUGBUG: any objects/arrays with crypted strings are still untouched here
+                    ret.Add(elem.Name, JsonValue.Create(elem.Value));
                     continue;
                 }
 

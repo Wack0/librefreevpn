@@ -19,6 +19,14 @@ namespace LibFreeVPN
             return Config == other.Config;
         }
 
+        public override int GetHashCode()
+        {
+            var hashProtocol = Protocol.GetHashCode();
+            if (!Registry.TryGetValue(ServerRegistryKeys.Hostname, out var strToHash))
+                strToHash = Config;
+            return hashProtocol ^ strToHash.GetHashCode();
+        }
+
         protected VPNServerBase() { }
 
         public VPNServerBase(string hostname, string port)

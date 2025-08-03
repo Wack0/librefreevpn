@@ -48,6 +48,8 @@ namespace LibFreeVPN.Servers
             extraRegistry.Add(ServerRegistryKeys.DisplayName, name);
             extraRegistry.Add(ServerRegistryKeys.Country, country);
 
+            if (serverType.ToLower().StartsWith("ssh ")) serverType = "ssh";
+
             switch (serverType.ToLower())
             {
                 case "ssh":
