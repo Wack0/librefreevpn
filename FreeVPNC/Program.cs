@@ -19,10 +19,10 @@ namespace FreeVPNC
 
         class BaseOptionsSearch : IBaseOptionsInclude
         {
-            [Option('i', "include", HelpText = "Include only providers supporting these protocols (OpenVPN, WireGuard, V2Ray, SSHTunnel)")]
+            [Option('i', "include", HelpText = "Include only providers supporting these protocols (OpenVPN, WireGuard, V2Ray, SSH)")]
             public IEnumerable<ServerProtocol> IncludeProtocols { get; set; }
 
-            [Option('e', "exclude", HelpText = "Exclude providers supporting these protocols (OpenVPN, WireGuard, V2Ray, SSHTunnel)")]
+            [Option('e', "exclude", HelpText = "Exclude providers supporting these protocols (OpenVPN, WireGuard, V2Ray, SSH)")]
             public IEnumerable<ServerProtocol> ExcludeProtocols { get; set; }
 
             [Option('r', "risky", Default = false, HelpText = "Include providers that make risky requests (to servers ran by the developers of the sample, or entities involved with them)")]
@@ -67,7 +67,7 @@ namespace FreeVPNC
             public string OutputPath { get; set; }
             public bool RequestOriginalConfig { get; set; }
 
-            [Option('i', "include", HelpText = "Include only servers of these protocols (OpenVPN, WireGuard, V2Ray, SSHTunnel)")]
+            [Option('i', "include", HelpText = "Include only servers of these protocols (OpenVPN, WireGuard, V2Ray, SSH)")]
             public IEnumerable<ServerProtocol> IncludeProtocols { get; set; }
         }
 
