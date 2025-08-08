@@ -63,7 +63,10 @@ namespace LibFreeVPN.Providers
                     extraRegistry.Add(ServerRegistryKeys.DisplayName, displayNameElem.GetString());
                 }
 
-                return V2RayServerSurge.ParseConfigFull(proxyElem.GetString(), extraRegistry);
+                var proxy = proxyElem.GetString();
+                if (proxy[0] == '{')
+                    return V2RayServer.ParseConfigFull(proxy, extraRegistry);
+                return V2RayServerSurge.ParseConfigFull(proxy, extraRegistry);
             });
         }
 
@@ -118,7 +121,7 @@ namespace LibFreeVPN.Providers
             await Task.WhenAll(configTasks);
 
             // and squash them down to one list
-            return configTasks.SelectMany((task) => task.Result);
+            return configTasks.SelectMany((task) => task.Result).Distinct();
         }
     }
 }

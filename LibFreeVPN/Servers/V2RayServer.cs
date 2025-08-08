@@ -56,6 +56,7 @@ namespace LibFreeVPN.Servers
 
                 json.RootElement.TryGetPropertyString("remarks", out var remarks);
                 var outbounds = serversElem.Deserialize<List<Outbounds4Ray>>();
+                var outboundsSbox = serversElem.Deserialize<List<Outbound4Sbox>>();
 
                 // TODO: support other protocols
 
@@ -167,8 +168,86 @@ namespace LibFreeVPN.Servers
 
                     return (ub.Uri.ToString(), ub.Host, ub.Port.ToString());
                 });
-                
-                return vlessData;
+                var vlessSboxData = outboundsSbox.Where((elem) => elem.type == "vless").Select((elem) =>
+                {
+                    var server = elem;
+                    var user = server;
+
+                    var query = System.Web.HttpUtility.ParseQueryString(string.Empty);
+                    var security = "none";
+                    if (elem.tls != null)
+                    {
+                        if (elem.tls?.reality?.enabled == true) security = "reality";
+                        else security = "tls";
+                    }
+                    query.Add("encryption", "none");
+                    query.AddNonNullValue("flow", user.flow);
+                    switch (security)
+                    {
+                        case "tls":
+                            query.AddNonNullValue("security", security);
+                            if (elem.tls?.insecure == true) query.Add("allowInsecure", "1");
+                            if (elem.tls.alpn != null && elem.tls.alpn.Count > 0)
+                                query.Add("alpn", string.Join(",", elem.tls.alpn));
+                            if (elem.tls?.utls?.enabled == true) query.AddNonNullValue("fp", elem.tls?.utls?.fingerprint);
+                            query.AddNonNullValue("sni", elem.tls?.server_name);
+                            break;
+                        case "reality":
+                            query.AddNonNullValue("security", security);
+                            query.AddNonNullValue("fp", elem.tls?.utls?.fingerprint);
+                            query.AddNonNullValue("sni", elem.tls?.server_name);
+                            query.AddNonNullValue("pbk", elem.tls?.reality?.public_key);
+                            query.AddNonNullValue("sid", elem.tls?.reality?.short_id);
+                            break;
+                    }
+
+                    var net = elem.transport?.type;
+                    if (string.IsNullOrEmpty(net)) net = "tcp";
+                    if (net == "h2") net = "http";
+                    query.Add("type", net);
+
+                    switch (net)
+                    {
+                        case "tcp":
+                            query.Add("headerType", elem.transport?.type ?? "none");
+                            query.AddNonNullValue("host", elem.transport?.hostList?.FirstOrDefault());
+                            query.AddNonNullValue("path", elem.transport?.path);
+                            break;
+                        case "ws":
+                            query.AddNonNullValue("host", elem.transport?.headers?.Host);
+                            query.AddNonNullValue("path", elem.transport?.path);
+                            break;
+                        case "httpupgrade":
+                            query.AddNonNullValue("host", elem.transport?.hostString);
+                            query.AddNonNullValue("path", elem.transport?.path);
+                            break;
+                        case "http":
+                            query.AddNonNullValue("host", elem.transport?.hostList?.FirstOrDefault());
+                            query.AddNonNullValue("path", elem.transport?.path);
+                            break;
+                        case "quic":
+                            break;
+                        case "grpc":
+                            query.AddNonNullValue("serviceName", elem.transport?.path);
+                            break;
+                    }
+
+                    var ub = new UriBuilder();
+                    ub.Scheme = "vless";
+                    ub.UserName = user.uuid;
+                    ub.Host = server.server;
+                    if (IPAddress.TryParse(ub.Host, out var ipAddr) && ipAddr.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                    {
+                        if (ub.Host[0] != '[' || ub.Host.Last() != ']') ub.Host = "[" + ub.Host + "]";
+                    }
+                    ub.Port = server.server_port.Value;
+                    ub.Query = query.ToString();
+                    if (!string.IsNullOrEmpty(remarks)) ub.Fragment = remarks;
+
+                    return (ub.Uri.ToString(), ub.Host, ub.Port.ToString());
+                });
+
+                return vlessData.Concat(vlessSboxData);
             }
 
             public override void AddExtraProperties(IDictionary<string, string> registry, string config)

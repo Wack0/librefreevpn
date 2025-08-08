@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using static LibFreeVPN.Servers.V2RayServer.Parser;
 
@@ -378,5 +379,138 @@ namespace LibFreeVPN.Servers.V2Ray
         public TlsSettings4Ray tlsSettings { get; set; }
         public XhttpSettings4Ray xhttpSettings { get; set; }
         public Sockopt4Ray sockopt { get; set; }
+    }
+
+    public class Outbound4Sbox
+    {
+        public string type { get; set; }
+        public string tag { get; set; }
+        public string server { get; set; }
+        public int? server_port { get; set; }
+        public List<string> server_ports { get; set; }
+        public string uuid { get; set; }
+        public string security { get; set; }
+        public int? alter_id { get; set; }
+        public string flow { get; set; }
+        public string hop_interval { get; set; }
+        public int? up_mbps { get; set; }
+        public int? down_mbps { get; set; }
+        public string auth_str { get; set; }
+        public int? recv_window_conn { get; set; }
+        public int? recv_window { get; set; }
+        public bool? disable_mtu_discovery { get; set; }
+        public string detour { get; set; }
+        public string method { get; set; }
+        public string username { get; set; }
+        public string password { get; set; }
+        public string congestion_control { get; set; }
+        public string version { get; set; }
+        public string network { get; set; }
+        public string packet_encoding { get; set; }
+        public List<string> local_address { get; set; }
+        public string private_key { get; set; }
+        public string peer_public_key { get; set; }
+        public List<int> reserved { get; set; }
+        public int? mtu { get; set; }
+        public string plugin { get; set; }
+        public string plugin_opts { get; set; }
+        public Tls4Sbox tls { get; set; }
+        public Multiplex4Sbox multiplex { get; set; }
+        public Transport4Sbox transport { get; set; }
+        public HyObfs4Sbox obfs { get; set; }
+        public List<string> outbounds { get; set; }
+        public bool? interrupt_exist_connections { get; set; }
+    }
+
+    public class Tls4Sbox
+    {
+        public bool enabled { get; set; }
+        public string server_name { get; set; }
+        public bool? insecure { get; set; }
+        public List<string> alpn { get; set; }
+        public Utls4Sbox utls { get; set; }
+        public Reality4Sbox reality { get; set; }
+    }
+
+    public class Multiplex4Sbox
+    {
+        public bool enabled { get; set; }
+        public string protocol { get; set; }
+        public int max_connections { get; set; }
+        public bool? padding { get; set; }
+    }
+
+    public class Utls4Sbox
+    {
+        public bool enabled { get; set; }
+        public string fingerprint { get; set; }
+    }
+
+    public class Reality4Sbox
+    {
+        public bool enabled { get; set; }
+        public string public_key { get; set; }
+        public string short_id { get; set; }
+    }
+
+    public class Transport4Sbox
+    {
+        public string type { get; set; }
+
+        [JsonPropertyName("host")]
+        public JsonElement? host { get; set; }
+        public string path { get; set; }
+        public Headers4Sbox headers { get; set; }
+
+        public string service_name { get; set; }
+        public string idle_timeout { get; set; }
+        public string ping_timeout { get; set; }
+        public bool? permit_without_stream { get; set; }
+
+        [JsonIgnore]
+        public string hostString
+        {
+            get
+            {
+                if (host?.ValueKind == JsonValueKind.String)
+                {
+                    return host?.ToString();
+                }
+
+                return null;
+            }
+        }
+
+        [JsonIgnore]
+        public List<string> hostList
+        {
+            get
+            {
+                if (host?.ValueKind == JsonValueKind.Array)
+                {
+                    try
+                    {
+                        return host?.Deserialize<List<string>>();
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+
+                return null;
+            }
+        }
+    }
+
+    public class Headers4Sbox
+    {
+        public string Host { get; set; }
+    }
+
+    public class HyObfs4Sbox
+    {
+        public string type { get; set; }
+        public string password { get; set; }
     }
 }
