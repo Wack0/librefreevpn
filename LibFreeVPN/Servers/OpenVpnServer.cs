@@ -146,6 +146,7 @@ namespace LibFreeVPN.Servers
             //var servers = new List<string>();
             var serverIdx = -1;
             var protoIdx = -1;
+            var devIdx = -1;
 
             for (int i = 0; i < split.Length; i++)
             {
@@ -159,13 +160,21 @@ namespace LibFreeVPN.Servers
                 {
                     if (protoIdx == -1 && tokenIdx != -1 && split[i].Substring(0, tokenIdx).ToLower() == "proto")
                         protoIdx = i;
+                    else if (devIdx == -1 && tokenIdx != -1 && split[i].Substring(0, tokenIdx).ToLower() == "dev")
+                        devIdx = i;
                     configClean.Add(split[i]);
                 }
             }
 
             if (serverIdx == -1)
             {
-                // No server was found, so use the protoIdx.
+                // No server was found, so use the protoIdx or devIdx
+                if (protoIdx == -1)
+                {
+                    protoIdx = devIdx + 1;
+                    // BUGBUG: add support for udp too if needed
+                    configClean.Insert(devIdx, "proto tcp");
+                }
                 serverIdx = protoIdx + 1;
             }
 

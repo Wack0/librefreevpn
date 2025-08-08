@@ -100,7 +100,11 @@ namespace LibFreeVPN.Servers
                 case "ssh":
                     if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
                     if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
-                    if (!server.TryGetPropertyString(OvpnKey, out ovpnconf)) ovpnconf = null;
+                    if (!server.TryGetPropertyString(OvpnKey, out ovpnconf))
+                    {
+                        if (root.RootElement.TryGetPropertyString(OvpnKey, out ovpnconf)) ovpnconf = DecryptInner(OvpnKey, ovpnconf);
+                        else ovpnconf = null;
+                    }
                     if (!server.TryGetPropertyString(OvpnPortKey, out ovpnport)) ovpnport = null;
 
                     var sshOnlyEnum = new SSHServer(hostname, port, username, password, extraRegistry).EnumerableSingle<IVPNServer>();
