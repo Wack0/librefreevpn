@@ -53,6 +53,8 @@ namespace LibFreeVPN.Servers
                 if (!json.RootElement.TryGetProperty("outbounds", out var serversElem)) throw new InvalidDataException();
                 if (serversElem.ValueKind != JsonValueKind.Array) throw new InvalidDataException();
 
+
+                json.RootElement.TryGetPropertyString("remarks", out var remarks);
                 var outbounds = serversElem.Deserialize<List<Outbounds4Ray>>();
 
                 // TODO: support other protocols
@@ -120,7 +122,8 @@ namespace LibFreeVPN.Servers
                             query.AddNonNullValue("seed", elem.streamSettings.kcpSettings?.seed);
                             break;
                         case "ws":
-                            query.AddNonNullValue("host", elem.streamSettings.wsSettings?.host);
+                            if (string.IsNullOrEmpty(elem.streamSettings.wsSettings?.host)) query.AddNonNullValue("host", elem.streamSettings.wsSettings?.headers?.Host);
+                            else query.AddNonNullValue("host", elem.streamSettings.wsSettings?.host);
                             query.AddNonNullValue("path", elem.streamSettings.wsSettings?.path);
                             break;
                         case "httpUpgrade":
@@ -160,6 +163,7 @@ namespace LibFreeVPN.Servers
                     }
                     ub.Port = server.port;
                     ub.Query = query.ToString();
+                    if (!string.IsNullOrEmpty(remarks)) ub.Fragment = remarks;
 
                     return (ub.Uri.ToString(), ub.Host, ub.Port.ToString());
                 });

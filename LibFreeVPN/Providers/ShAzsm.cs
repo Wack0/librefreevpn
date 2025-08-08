@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace LibFreeVPN.Providers
 {
-    // Android app, distributed outside of Play Store. SocksHttp fork. SSH + v2ray, but the v2ray configs are bogus.
+    // Android app, distributed outside of Play Store. SocksHttp fork. SSH + v2ray (v2ray can domain front through zoom)
     public sealed class ShAzsm : VPNProviderBase
     {
         private sealed class Parser : SocksHttpParser<Parser>
@@ -54,7 +54,7 @@ namespace LibFreeVPN.Providers
         public override bool RiskyRequests => false;
 
         public override bool HasProtocol(ServerProtocol protocol) =>
-            protocol == ServerProtocol.SSH;
+            protocol == ServerProtocol.SSH && protocol == ServerProtocol.V2Ray;
 
         private static readonly string s_RepoName = Encoding.ASCII.GetString(Convert.FromBase64String("U1VTSUUtMjAyMy9KU09O"));
         private static readonly string s_ConfigName = Encoding.ASCII.GetString(Convert.FromBase64String("ZmlsZXMvY29uZmlnLmpzb24="));
@@ -68,7 +68,7 @@ namespace LibFreeVPN.Providers
 
             // And try to parse it
             var extraRegistry = CreateExtraRegistry(Name);
-            return Parser.ParseConfig(config, extraRegistry).Where((server) => server.Protocol == ServerProtocol.SSH);
+            return Parser.ParseConfig(config, extraRegistry);
         }
     }
 }
