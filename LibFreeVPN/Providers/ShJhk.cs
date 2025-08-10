@@ -125,7 +125,7 @@ namespace LibFreeVPN.Providers.ShJhk
             var config = await httpClient.GetStringAsync(string.Format("https://raw.githubusercontent.com/{0}/main/{1}", RepoName, ConfigName));
 
             // And try to parse it
-            var extraRegistry = CreateExtraRegistry(Name);
+            var extraRegistry = CreateExtraRegistry();
             return ParserBase<TParser>.ParseConfig(config, extraRegistry);
         }
     }
@@ -134,8 +134,6 @@ namespace LibFreeVPN.Providers.ShJhk
     {
         
         protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("SkhLVlBOL0pL"));
-
-        public override string Name => nameof(ShJk);
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5mYXN0dnBuLmpr";
 
@@ -148,8 +146,6 @@ namespace LibFreeVPN.Providers.ShJhk
     {
         protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("SkhLVlBOL0pWUE5WSVA="));
 
-        public override string Name => nameof(ShJkV);
-
         public override string SampleSource => "aHR0cHM6Ly9naXRodWIuY29tL1RIQU5EQVJMSU4yMDE1L1Rlc3QvcmVsZWFzZXMvZG93bmxvYWQvdjIuMC4wL0pLLlZJUC5WUE5fMi4wLjAuYXBr";
 
         public override string SampleVersion => "2.0.0";
@@ -160,8 +156,6 @@ namespace LibFreeVPN.Providers.ShJhk
     public sealed class ShMmt : ShJhkBase<Parser4669>
     {
         protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("SkhLVlBOL01NVFZQTg=="));
-
-        public override string Name => nameof(ShMmt);
 
         // No sample found - saw in repo list and observed to use the same memecrypto as the others here
         public override string SampleSource => "aHR0cHM6Ly9naXRodWIuY29tL0pIS1ZQTi9NTVRWUE4=";
@@ -174,8 +168,6 @@ namespace LibFreeVPN.Providers.ShJhk
     public sealed class ShKo : ShJhkBase<Parser4669>
     {
         protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("SkhLVlBOL0tPS08="));
-
-        public override string Name => nameof(ShKo);
 
         // No sample found - saw in repo list and observed to use the same memecrypto as the others here
         public override string SampleSource => "aHR0cHM6Ly9naXRodWIuY29tL0pIS1ZQTi9LT0tP";

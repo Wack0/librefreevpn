@@ -45,7 +45,6 @@ namespace LibFreeVPN.Providers
                 }
             }
         }
-        public override string Name => nameof(ShAzsm);
 
         public override string SampleSource => "aHR0cHM6Ly93d3cubWVkaWFmaXJlLmNvbS9maWxlL2l2aGJsajhwdnNlbGtxcS9PcGVuVlBOKzIwNDguYXBrL2ZpbGU=";
 
@@ -67,7 +66,7 @@ namespace LibFreeVPN.Providers
             var config = await httpClient.GetStringAsync(string.Format("https://raw.githubusercontent.com/{0}/main/{1}", s_RepoName, s_ConfigName));
 
             // And try to parse it
-            var extraRegistry = CreateExtraRegistry(Name);
+            var extraRegistry = CreateExtraRegistry();
             return Parser.ParseConfig(config, extraRegistry);
         }
     }

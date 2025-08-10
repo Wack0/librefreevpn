@@ -20,8 +20,6 @@ namespace LibFreeVPN.Providers
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("YVolUlUlaXRSTUJeOCZVZQ=="));
         }
 
-        public override string Name => nameof(ShIo);
-
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5tb2JpbGVhcHAucm92cG4=";
 
         public override string SampleVersion => "4.0";
@@ -41,7 +39,7 @@ namespace LibFreeVPN.Providers
             var config = await httpClient.GetStringAsync(s_RequestUri);
 
             // And try to parse it
-            var extraRegistry = CreateExtraRegistry(Name);
+            var extraRegistry = CreateExtraRegistry();
             return Parser.ParseConfig(config, extraRegistry);
         }
     }

@@ -35,7 +35,7 @@ namespace LibFreeVPN.Providers.ShNo
             var config = await httpClient.GetStringAsync(string.Format("https://raw.githubusercontent.com/{0}/main/{1}", s_RepoName, ConfigName));
 
             // And try to parse it
-            var extraRegistry = CreateExtraRegistry(Name);
+            var extraRegistry = CreateExtraRegistry();
             return SocksHttpWithOvpnParserTea<TParser>.ParseConfig(config, extraRegistry);
         }
     }
@@ -46,7 +46,6 @@ namespace LibFreeVPN.Providers.ShNo
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("b2htMDkwNTI5"));
         }
-        public override string Name => nameof(ShNoo);
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS53aWxsYmVhbG9uZS5vaG12cG4=";
 
@@ -61,7 +60,6 @@ namespace LibFreeVPN.Providers.ShNo
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("c2F0aHUyMDA1MzA="));
         }
-        public override string Name => nameof(ShNosa);
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5wdWJsaWNzZXJ2aWNlc3NoLnNhdGh1dnBu";
 
@@ -76,7 +74,6 @@ namespace LibFreeVPN.Providers.ShNo
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("bmFtbzA5MDUyOQ=="));
         }
-        public override string Name => nameof(ShNona);
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5hcHB4cmF5c2VydmljZS5uYW1vdnBu";
 
@@ -91,7 +88,6 @@ namespace LibFreeVPN.Providers.ShNo
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("Z29vZHZwbjA5MDUyOQ=="));
         }
-        public override string Name => nameof(ShNogo);
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5vdnBuc2V2aWNlLmdvb2R2cG4=";
 

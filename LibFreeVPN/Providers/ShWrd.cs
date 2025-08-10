@@ -39,7 +39,7 @@ namespace LibFreeVPN.Providers.ShWrd
             var config = await httpClient.GetStringAsync(string.Format("https://raw.githubusercontent.com/{0}/main/{1}", RepoName, ConfigName));
 
             // And try to parse it
-            var extraRegistry = CreateExtraRegistry(Name);
+            var extraRegistry = CreateExtraRegistry();
             return SocksHttpParser<TParser>.ParseConfig(config, extraRegistry);
         }
     }
@@ -50,7 +50,6 @@ namespace LibFreeVPN.Providers.ShWrd
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("cHVrYW5ndnBuMjcwQA=="));
         }
-        public override string Name => nameof(ShWrdPk);
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5wdWthbmd2cG4udGg=";
 
@@ -65,7 +64,6 @@ namespace LibFreeVPN.Providers.ShWrd
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("a2hhbXZwbjI3MEA="));
         }
-        public override string Name => nameof(ShWrdKh);
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5oa2FtdnBuLm5ldA==";
 
@@ -80,7 +78,6 @@ namespace LibFreeVPN.Providers.ShWrd
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("bXR2cG4yNUA="));
         }
-        public override string Name => nameof(ShWrdMt);
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5tdHZwbi5tdHZwbg==";
 
@@ -100,7 +97,6 @@ namespace LibFreeVPN.Providers.ShWrd
                 0xbf, 0xdc, 0x80, 0x6b, 0x08, 0xa9, 0x1e, 0xc9
             };
         }
-        public override string Name => nameof(ShWrdErr);
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5tdHZwbi5tdHZwbg==";
 

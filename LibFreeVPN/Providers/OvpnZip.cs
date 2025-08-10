@@ -87,7 +87,7 @@ namespace LibFreeVPN.Providers.OvpnZip
             return list.SelectMany((kv) =>
             {
                 var conf = kv.Value;
-                var registry = CreateExtraRegistry(Name);
+                var registry = CreateExtraRegistry();
                 registry.Add(ServerRegistryKeys.DisplayName, Path.GetFileName(kv.Key));
                 // Remove some part of the config that vanilla OpenVPN doesn't like.
                 var offStart = conf.IndexOf("<slow>");
@@ -156,8 +156,6 @@ namespace LibFreeVPN.Providers.OvpnZip
 
     public sealed class OvpnZipPdv : OvpnZipBase
     {
-        public override string Name => nameof(OvpnZipPdv);
-
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPXBsYWR1ay5wbGFkdWsuYXBwdnBu";
 
         public override string SampleVersion => "28";

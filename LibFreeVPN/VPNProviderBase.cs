@@ -8,7 +8,7 @@ namespace LibFreeVPN
 {
     public abstract class VPNProviderBase : IVPNProvider
     {
-        public abstract string Name { get; }
+        public virtual string Name => GetType().Name;
         public abstract string SampleSource { get; }
         public abstract string SampleVersion { get; }
         public abstract bool RiskyRequests { get; }
