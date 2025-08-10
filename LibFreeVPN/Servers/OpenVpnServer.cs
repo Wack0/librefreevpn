@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LibFreeVPN.Servers
@@ -74,6 +75,7 @@ namespace LibFreeVPN.Servers
                 var configClean = new List<string>();
                 var servers = new List<string>();
                 var serverIdx = -1;
+                string port = null;
 
                 for (int i = 0; i < split.Length; i++)
                 {
@@ -85,12 +87,19 @@ namespace LibFreeVPN.Servers
                     }
                     else
                     {
+                        if (port == null && tokenIdx != -1 && split[i].Substring(0, tokenIdx).ToLower() == "port")
+                        {
+                            var portCommentIdx = split[i].IndexOf('#');
+                            var cleanPort = split[i];
+                            if (portCommentIdx != -1) cleanPort = split[i].Substring(0, portCommentIdx);
+                            port = cleanPort.Split(' ')[1];
+                        }
                         configClean.Add(split[i]);
                     }
                 }
 
                 // for each server, take a copy of the configClean, add the server in, yield return it
-                foreach (var server in servers)
+                return servers.SelectMany((server) =>
                 {
                     var thisConfig = new List<string>(configClean);
                     thisConfig.Insert(serverIdx, server);
@@ -99,11 +108,20 @@ namespace LibFreeVPN.Servers
                     var cleanServer = server;
                     if (serverCommentIdx != -1) cleanServer = server.Substring(0, serverCommentIdx);
                     var splitServer = cleanServer.Split(' ');
-                    if (splitServer.Length < 3) continue;
+                    var thisPort = string.Empty;
+                    if (splitServer.Length < 2) return Enumerable.Empty<(string, string, string)>();
+                    else if (splitServer.Length == 2)
+                    {
+                        if (port == null) return Enumerable.Empty<(string, string, string)>();
+                        thisPort = port;
+                    }
+                    else
+                    {
+                        thisPort = splitServer[2];
+                    }
 
-                    yield return (string.Join("\r\n", thisConfig.ToArray()), splitServer[1], splitServer[2]);
-                }
-                yield break;
+                    return (string.Join("\r\n", thisConfig.ToArray()), splitServer[1], thisPort).EnumerableSingle();
+                }).ToList();
             }
         }
         public OpenVpnServer(string config) : base(config)
