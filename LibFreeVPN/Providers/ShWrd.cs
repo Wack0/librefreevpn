@@ -11,7 +11,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 // Android apps. SocksHttp using SSH + OpenVPN
-// All of these by same developer, same github repo used, same xxtea constant, differs only in xxtea keys.
+// All of these by same developer.
 // Original apps use cname to github pages, this implementation hits the repo directly.
 namespace LibFreeVPN.Providers.ShWrd
 {
@@ -105,5 +105,33 @@ namespace LibFreeVPN.Providers.ShWrd
         protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("RVJST1ItVlBOL2Vycm9yLXZwbi5naXRodWIuaW8="));
 
         protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("Y29uZmlnLmpzb24="));
+    }
+
+    public sealed class ShWrdPnt : ShWrdBase<ShWrdPnt.Parser>
+    {
+        public sealed class Parser : SocksHttpWithOvpnNumericParserTea<Parser>
+        {
+            protected override string ServerTypeKey => "Category";
+            protected override uint TeaDeltaOuter => 0xD1FBFA0B;
+            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("Y29tLnBudHZwbi5uZXQubQ=="));
+            protected override int InnerKey => 7376;
+            protected override bool OvpnPortIsBogus => true;
+
+            protected override string DecryptInner(string jsonKey, string ciphertext)
+            {
+                if (jsonKey == OvpnPortKey) return ciphertext.Split(':')[0];
+                if (jsonKey != HostnameKey && jsonKey != UsernameKey && jsonKey != PasswordKey && jsonKey != V2RayKey) return ciphertext;
+
+                return DecryptInner(ciphertext);
+            }
+        }
+
+        public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5wbnR2cG4ubmV0";
+
+        public override string SampleVersion => "1.0.5";
+
+        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("c2Fuc29lMjAyMi9QTlRfVlBO"));
+
+        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("Y29uZmlnLmZpbGU="));
     }
 }

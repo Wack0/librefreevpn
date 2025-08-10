@@ -136,6 +136,8 @@ namespace LibFreeVPN.Servers
         protected override string OvpnPortKey => "TcpPort";
         protected override string OvpnKey => "ovpnCertificate";
 
+        protected virtual bool OvpnPortIsBogus => false;
+
         protected override IEnumerable<IVPNServer> ParseServer(JsonDocument root, JsonElement server, IReadOnlyDictionary<string, string> passedExtraRegistry)
         {
             string serverType = null;
@@ -177,6 +179,13 @@ namespace LibFreeVPN.Servers
                         else ovpnconf = null;
                     }
                     if (string.IsNullOrEmpty(ovpnconf)) throw new InvalidDataException();
+                    if (OvpnPortIsBogus)
+                    {
+                        // Port in the JSON object is bogus, the real port is in the openvpn config
+                        var real = OpenVpnServer.ParseConfigFull(ovpnconf).FirstOrDefault();
+                        if (real == null || !real.Registry.TryGetValue(ServerRegistryKeys.Port, out port)) throw new InvalidDataException();
+
+                    }
                     var ovpnRegistry = new Dictionary<string, string>();
                     foreach (var kv in extraRegistry) ovpnRegistry.Add(kv.Key, kv.Value);
                     ovpnRegistry.Add(ServerRegistryKeys.Username, username);
@@ -223,20 +232,22 @@ namespace LibFreeVPN.Servers
     public abstract class SocksHttpWithOvpnNumericParserTea<TType> : SocksHttpWithOvpnNumericParser<TType>
         where TType : SocksHttpWithOvpnNumericParserTea<TType>, new()
     {
-        protected virtual uint TeaDelta => 0x2E0BA747;
+        protected virtual uint TeaDeltaOuter => 0x2E0BA747;
+        protected virtual uint TeaDeltaInner => 0x2E0BA747;
 
-        private XXTEA XXTEA => XXTEA.Create(TeaDelta);
+        private XXTEA XXTEAOuter => XXTEA.Create(TeaDeltaOuter);
+        private XXTEA XXTEAInner => XXTEA.Create(TeaDeltaInner);
         protected virtual string OuterKey => InnerKey.ToString();
         protected abstract int InnerKey { get; }
 
         protected override string DecryptOuter(string ciphertext)
         {
-            return XXTEA.DecryptBase64StringToString(ciphertext, OuterKey);
+            return XXTEAOuter.DecryptBase64StringToString(ciphertext, OuterKey);
         }
 
         protected virtual string DecryptInner(string ciphertext)
         {
-            var arr = XXTEA.DecryptBase64StringToString(ciphertext, InnerKey.ToString()).ToCharArray();
+            var arr = XXTEAInner.DecryptBase64StringToString(ciphertext, InnerKey.ToString()).ToCharArray();
             for (int i = 0; i < arr.Length; i++) arr[i] -= (char)(InnerKey * 2);
             return new string(arr);
         }
