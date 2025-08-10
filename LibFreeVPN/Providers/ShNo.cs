@@ -13,29 +13,8 @@ using System.Threading.Tasks;
 // All of these by same developer, same github repo used, same xxtea constant, differs only in xxtea keys.
 namespace LibFreeVPN.Providers.ShNo
 {
-    public abstract class ParserBase<TType> : SocksHttpWithOvpnParser<TType>
-        where TType : ParserBase<TType>, new()
-    {
-        private static readonly XXTEA s_XXTEA = new XXTEA(0x2E0BA747);
-
-        protected abstract string OuterKey { get; }
-
-        protected override string DecryptOuter(string ciphertext)
-        {
-            return s_XXTEA.DecryptBase64StringToString(ciphertext, OuterKey);
-        }
-
-        protected override string DecryptInner(string jsonKey, string ciphertext)
-        {
-            if (jsonKey != HostnameKey && jsonKey != UsernameKey && jsonKey != PasswordKey && jsonKey != OvpnKey && jsonKey != V2RayKey) return ciphertext;
-
-            return Encoding.UTF8.GetString(Convert.FromBase64String(ciphertext));
-        }
-    }
-
-
     public abstract class ShNoBase<TParser> : VPNProviderBase
-        where TParser : ParserBase<TParser>, new()
+        where TParser : SocksHttpWithOvpnParserTea<TParser>, new()
     {
         
         protected abstract string ConfigName { get; }
@@ -57,13 +36,13 @@ namespace LibFreeVPN.Providers.ShNo
 
             // And try to parse it
             var extraRegistry = CreateExtraRegistry(Name);
-            return ParserBase<TParser>.ParseConfig(config, extraRegistry);
+            return SocksHttpWithOvpnParserTea<TParser>.ParseConfig(config, extraRegistry);
         }
     }
 
     public sealed class ShNoo : ShNoBase<ShNoo.Parser>
     {
-        public sealed class Parser : ParserBase<Parser>
+        public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("b2htMDkwNTI5"));
         }
@@ -78,7 +57,7 @@ namespace LibFreeVPN.Providers.ShNo
 
     public sealed class ShNosa : ShNoBase<ShNosa.Parser>
     {
-        public sealed class Parser : ParserBase<Parser>
+        public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("c2F0aHUyMDA1MzA="));
         }
@@ -93,7 +72,7 @@ namespace LibFreeVPN.Providers.ShNo
 
     public sealed class ShNona : ShNoBase<ShNona.Parser>
     {
-        public sealed class Parser : ParserBase<Parser>
+        public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("bmFtbzA5MDUyOQ=="));
         }
@@ -108,7 +87,7 @@ namespace LibFreeVPN.Providers.ShNo
 
     public sealed class ShNogo : ShNoBase<ShNogo.Parser>
     {
-        public sealed class Parser : ParserBase<Parser>
+        public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
             protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("Z29vZHZwbjA5MDUyOQ=="));
         }

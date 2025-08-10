@@ -15,25 +15,11 @@ namespace LibFreeVPN.Providers
 
     public sealed class ShEs : VPNProviderBase
     {
-        private class Parser : SocksHttpWithOvpnParser<Parser>
+        private sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
             protected override string OvpnKey => "setOpenVPN";
 
-            private static readonly XXTEA s_XXTEA = new XXTEA(0x2E0BA747);
-
-            private static readonly string s_OuterKey = Encoding.ASCII.GetString(Convert.FromBase64String("YU5MY0cyRlQ2OXZBQk5CcQ=="));
-
-            protected override string DecryptOuter(string ciphertext)
-            {
-                return s_XXTEA.DecryptBase64StringToString(ciphertext, s_OuterKey);
-            }
-
-            protected override string DecryptInner(string jsonKey, string ciphertext)
-            {
-                if (jsonKey != HostnameKey && jsonKey != UsernameKey && jsonKey != PasswordKey && jsonKey != OvpnKey && jsonKey != V2RayKey) return ciphertext;
-
-                return Encoding.UTF8.GetString(Convert.FromBase64String(ciphertext));
-            }
+            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("YU5MY0cyRlQ2OXZBQk5CcQ=="));
         }
 
         public override string Name => nameof(ShEs);

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 // All of these by same developer, same github account used, xxtea + custom unicode rot.
 namespace LibFreeVPN.Providers.ShJhk
 {
-    public abstract class ParserBase<TType> : SocksHttpWithOvpnParser<TType>
+    public abstract class ParserBase<TType> : SocksHttpWithOvpnParserTea<TType>
         where TType : ParserBase<TType>, new()
     {
         protected override string CountryNameKey => "FLAG";
@@ -21,14 +21,12 @@ namespace LibFreeVPN.Providers.ShJhk
         protected override string OvpnPortKey => "TcpPort";
         protected override string OvpnKey => "ovpnCertificate";
 
-        private static readonly XXTEA s_XXTEA = new XXTEA(0x2E0BA747);
-
-        protected virtual string OuterKey => InnerKey.ToString();
+        protected override string OuterKey => InnerKey.ToString();
         protected abstract int InnerKey { get; }
 
         protected override string DecryptOuter(string ciphertext)
         {
-            var arr = s_XXTEA.DecryptBase64StringToString(ciphertext, OuterKey).ToCharArray();
+            var arr = base.DecryptOuter(ciphertext).ToCharArray();
             for (int i = 0; i < arr.Length; i++) arr[i] -= (char)(InnerKey * 2);
             return new string(arr);
         }
