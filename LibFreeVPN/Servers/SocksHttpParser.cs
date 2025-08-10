@@ -128,17 +128,88 @@ namespace LibFreeVPN.Servers
         }
     }
 
+    public abstract class SocksHttpWithOvpnNumericParser<TType> : SocksHttpWithOvpnParser<TType>
+        where TType : SocksHttpWithOvpnNumericParser<TType>, new()
+    {
+        protected override string CountryNameKey => "FLAG";
+        protected override string ServerTypeKey => "serverType";
+        protected override string OvpnPortKey => "TcpPort";
+        protected override string OvpnKey => "ovpnCertificate";
+
+        protected override IEnumerable<IVPNServer> ParseServer(JsonDocument root, JsonElement server, IReadOnlyDictionary<string, string> passedExtraRegistry)
+        {
+            string serverType = null;
+            if (!server.TryGetProperty(ServerTypeKey, out var serverTypeJson)) throw new InvalidDataException();
+            switch (serverTypeJson.ValueKind)
+            {
+                case JsonValueKind.String:
+                    serverType = serverTypeJson.GetString();
+                    break;
+                case JsonValueKind.Number:
+                    serverType = serverTypeJson.GetInt32().ToString();
+                    break;
+                default:
+                    throw new InvalidDataException();
+            }
+
+            string hostname, port;
+            string username = null, password = null, v2ray = null, ovpnconf = null;
+            string name, country;
+
+            if (!server.TryGetPropertyString(ServerNameKey, out name)) throw new InvalidDataException();
+            if (!server.TryGetPropertyString(CountryNameKey, out country)) throw new InvalidDataException();
+            if (!server.TryGetPropertyString(HostnameKey, out hostname)) throw new InvalidDataException();
+            if (!server.TryGetPropertyString(OvpnPortKey, out port)) throw new InvalidDataException();
+
+            var extraRegistry = new Dictionary<string, string>();
+            foreach (var kv in passedExtraRegistry) extraRegistry.Add(kv.Key, kv.Value);
+            extraRegistry.Add(ServerRegistryKeys.DisplayName, name);
+            extraRegistry.Add(ServerRegistryKeys.Country, country);
+
+            switch (serverType.ToLower())
+            {
+                case "0": // ovpn
+                    if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
+                    if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
+                    if (!server.TryGetPropertyString(OvpnKey, out ovpnconf))
+                    {
+                        if (root.RootElement.TryGetPropertyString(OvpnKey, out ovpnconf)) ovpnconf = DecryptInner(OvpnKey, ovpnconf);
+                        else ovpnconf = null;
+                    }
+                    if (string.IsNullOrEmpty(ovpnconf)) throw new InvalidDataException();
+                    var ovpnRegistry = new Dictionary<string, string>();
+                    foreach (var kv in extraRegistry) ovpnRegistry.Add(kv.Key, kv.Value);
+                    ovpnRegistry.Add(ServerRegistryKeys.Username, username);
+                    ovpnRegistry.Add(ServerRegistryKeys.Password, password);
+                    return OpenVpnServer.ParseConfigFull(OpenVpnServer.InjectHostIntoConfig(ovpnconf, hostname, port), ovpnRegistry);
+                case "1": // ssh
+                    if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
+                    if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
+                    return new SSHServer(hostname, port, username, password, extraRegistry).EnumerableSingle<IVPNServer>();
+                // 2 => dns
+                case "3": // v2ray
+                    if (!server.TryGetPropertyString(V2RayKey, out v2ray)) throw new InvalidDataException();
+                    return V2RayServer.ParseConfigFull(v2ray, extraRegistry);
+                // 4 => udp
+                default:
+                    throw new InvalidDataException();
+            }
+        }
+    }
+
     // Subclass for the most common cryptoschemes used:
     public abstract class SocksHttpWithOvpnParserTea<TType> : SocksHttpWithOvpnParser<TType>
         where TType : SocksHttpWithOvpnParserTea<TType>, new()
     {
-        private static readonly XXTEA s_XXTEA = new XXTEA(0x2E0BA747);
+        protected virtual uint TeaDelta => 0x2E0BA747;
+
+        private XXTEA XXTEA => XXTEA.Create(TeaDelta);
 
         protected abstract string OuterKey { get; }
 
         protected override string DecryptOuter(string ciphertext)
         {
-            return s_XXTEA.DecryptBase64StringToString(ciphertext, OuterKey);
+            return XXTEA.DecryptBase64StringToString(ciphertext, OuterKey);
         }
 
         protected override string DecryptInner(string jsonKey, string ciphertext)
@@ -149,10 +220,42 @@ namespace LibFreeVPN.Servers
         }
     }
 
+    public abstract class SocksHttpWithOvpnNumericParserTea<TType> : SocksHttpWithOvpnNumericParser<TType>
+        where TType : SocksHttpWithOvpnNumericParserTea<TType>, new()
+    {
+        protected virtual uint TeaDelta => 0x2E0BA747;
+
+        private XXTEA XXTEA => XXTEA.Create(TeaDelta);
+        protected virtual string OuterKey => InnerKey.ToString();
+        protected abstract int InnerKey { get; }
+
+        protected override string DecryptOuter(string ciphertext)
+        {
+            return XXTEA.DecryptBase64StringToString(ciphertext, OuterKey);
+        }
+
+        protected virtual string DecryptInner(string ciphertext)
+        {
+            var arr = XXTEA.DecryptBase64StringToString(ciphertext, InnerKey.ToString()).ToCharArray();
+            for (int i = 0; i < arr.Length; i++) arr[i] -= (char)(InnerKey * 2);
+            return new string(arr);
+        }
+
+        protected override string DecryptInner(string jsonKey, string ciphertext)
+        {
+            if (jsonKey == OvpnPortKey) return ciphertext.Split(':')[0];
+            if (jsonKey != HostnameKey && jsonKey != UsernameKey && jsonKey != PasswordKey && jsonKey != OvpnKey && jsonKey != V2RayKey) return ciphertext;
+
+            return DecryptInner(ciphertext);
+        }
+    }
+
     public abstract class SocksHttpParserTeaAes<TType> : SocksHttpParser<TType>
         where TType : SocksHttpParserTeaAes<TType>, new()
     {
-        private static readonly XXTEA s_XXTEA = new XXTEA(0x2E0BA747);
+        protected virtual uint TeaDelta => 0x2E0BA747;
+
+        private XXTEA XXTEA => XXTEA.Create(TeaDelta);
 
         protected abstract string OuterKey { get; }
 
@@ -168,7 +271,7 @@ namespace LibFreeVPN.Servers
 
         protected override string DecryptOuter(string ciphertext)
         {
-            return s_XXTEA.DecryptBase64StringToString(ciphertext, OuterKey);
+            return XXTEA.DecryptBase64StringToString(ciphertext, OuterKey);
         }
 
         protected override string DecryptInner(string jsonKey, string ciphertext)

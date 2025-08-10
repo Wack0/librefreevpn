@@ -14,6 +14,7 @@
 \**********************************************************/
 
 using System;
+using System.Collections.Concurrent;
 using System.Text;
 
 namespace LibFreeVPN.Memecrypto
@@ -23,6 +24,7 @@ namespace LibFreeVPN.Memecrypto
     public sealed class XXTEA
     {
         private static readonly UTF8Encoding s_utf8 = new UTF8Encoding();
+        private static readonly ConcurrentDictionary<uint, XXTEA> s_Instances = new ConcurrentDictionary<uint, XXTEA>();
 
         private readonly uint m_delta;
 
@@ -31,9 +33,14 @@ namespace LibFreeVPN.Memecrypto
             return (z >> 5 ^ y << 2) + (y >> 3 ^ z << 4) ^ (sum ^ y) + (k[p & 3 ^ e] ^ z);
         }
 
-        public XXTEA(uint delta = 0x9e3779b9u)
+        private XXTEA(uint delta)
         {
             m_delta = delta;
+        }
+
+        public static XXTEA Create(uint delta = 0x9e3779b9u)
+        {
+            return s_Instances.GetOrAdd(delta, new XXTEA(delta));
         }
 
         public byte[] Encrypt(byte[] data, byte[] key)
