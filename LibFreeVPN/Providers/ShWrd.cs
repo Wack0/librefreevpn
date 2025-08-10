@@ -88,4 +88,26 @@ namespace LibFreeVPN.Providers.ShWrd
 
         protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("aHVubWFpL01ULVZQTg=="));
     }
+
+    public sealed class ShWrdErr : ShWrdBase<ShWrdErr.Parser>
+    {
+        public sealed class Parser : SocksHttpParserAes<Parser>
+        {
+            protected override byte[] OuterKey => new byte[] {
+                0xd2, 0x25, 0x9f, 0xcd, 0x59, 0x94, 0xa1, 0xb4,
+                0x8c, 0x90, 0x2c, 0xf0, 0x55, 0x3c, 0x85, 0x7c,
+                0xb8, 0xd8, 0x35, 0x4b, 0x40, 0x07, 0xbc, 0x4f,
+                0xbf, 0xdc, 0x80, 0x6b, 0x08, 0xa9, 0x1e, 0xc9
+            };
+        }
+        public override string Name => nameof(ShWrdErr);
+
+        public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5tdHZwbi5tdHZwbg==";
+
+        public override string SampleVersion => "2.2";
+
+        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("RVJST1ItVlBOL2Vycm9yLXZwbi5naXRodWIuaW8="));
+
+        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("Y29uZmlnLmpzb24="));
+    }
 }
