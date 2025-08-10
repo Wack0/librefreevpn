@@ -137,4 +137,43 @@ namespace LibFreeVPN.Providers.ShWrd
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.OpenVPN;
     }
+
+    public sealed class ShWrdIda : ShWrdBase<ShWrdIda.Parser>
+    {
+        public sealed class Parser : SocksHttpParserTeaAes<Parser>
+        {
+            protected override string CountryNameKey => "FLAG";
+
+            protected override string V2RayKey => "V2json";
+
+            protected override string ServerTypeKey => "tunnelT";
+
+            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("MTAyMzI1MzU="));
+
+            protected override uint TeaDelta => 0xD1FBFA0B;
+
+            // No inner crypto
+            protected override string DecryptInner(string jsonKey, string ciphertext) => ciphertext;
+        }
+
+        public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWlkYS5wcm8ubmV0";
+
+        public override string SampleVersion => "10.10";
+
+        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("RWtyb21TU0gvTnVydWxmYWhtaQ=="));
+
+        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("ZmlsZWlkYXZwbi5qc29u"));
+
+        public override bool HasProtocol(ServerProtocol protocol) =>
+            protocol == ServerProtocol.SSH;
+
+
+        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
+        {
+            // v2ray servers in this config do not work, neither do any other servers with hostnames matching any v2ray servers.
+            var servers = await base.GetServersAsyncImpl();
+            var list = servers.Where((server) => server.Protocol == ServerProtocol.V2Ray).Select((server) => server.Registry[ServerRegistryKeys.Hostname]).ToList();
+            return servers.Where((server) => server.Protocol != ServerProtocol.V2Ray && !list.Contains(server.Registry[ServerRegistryKeys.Hostname]));
+        }
+    }
 }

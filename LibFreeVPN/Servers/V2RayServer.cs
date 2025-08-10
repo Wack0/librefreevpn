@@ -60,6 +60,108 @@ namespace LibFreeVPN.Servers
 
                 // TODO: support other protocols
 
+                var vmessData = outbounds.Where((elem) => elem.protocol == "vmess").SelectMany((elem) =>
+                {
+                    // Convert one outbound with several servers to several outbounds with one server each.
+                    var servers = elem.settings.vnext;
+
+                    var list = new List<Outbounds4Ray>();
+                    foreach (var server in servers)
+                    {
+                        // Convert one server with several users to several servers with one user each.
+                        var users = server.users;
+                        foreach (var user in users)
+                        {
+                            server.users = new List<UsersItem4Ray>() { user };
+                            elem.settings.vnext = new List<VnextItem4Ray>() { server };
+                            list.Add(elem);
+                        }
+                    }
+
+                    return list;
+                }).Select((elem) =>
+                {
+                    var server = elem.settings.vnext[0];
+                    var user = server.users[0];
+
+                    var jsonConfig = new JsonObject()
+                    {
+                        ["v"] = "2"
+                    };
+
+                    if (!string.IsNullOrEmpty(remarks)) jsonConfig.Add("ps", remarks);
+
+                    var host = server.address;
+                    if (IPAddress.TryParse(host, out var ipAddr) && ipAddr.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                    {
+                        if (host[0] != '[' || host.Last() != ']') host = "[" + host + "]";
+                    }
+                    jsonConfig.Add("add", host);
+                    jsonConfig.Add("port", server.port.ToString());
+                    jsonConfig.Add("id", user.id);
+                    jsonConfig.Add("aid", user.alterId.HasValue ? user.alterId.Value.ToString() : "0");
+                    jsonConfig.Add("scy", user.security);
+
+                    switch (elem.streamSettings.security)
+                    {
+                        case "tls":
+                            jsonConfig.AddNonNullValue("tls", elem.streamSettings.security);
+                            if (elem.streamSettings.tlsSettings.alpn != null && elem.streamSettings.tlsSettings.alpn.Count > 0)
+                                jsonConfig.Add("alpn", string.Join(",", elem.streamSettings.tlsSettings.alpn));
+                            jsonConfig.AddNonNullValue("fp", elem.streamSettings.tlsSettings.fingerprint);
+                            jsonConfig.AddNonNullValue("sni", elem.streamSettings.tlsSettings.serverName);
+                            break;
+                    }
+
+                    var net = elem.streamSettings.network;
+                    if (string.IsNullOrEmpty(net)) net = "tcp";
+                    if (net == "h2") net = "http";
+                    jsonConfig.Add("net", net);
+
+                    switch (net)
+                    {
+                        case "tcp":
+                            jsonConfig.Add("type", elem.streamSettings.tcpSettings?.header?.type ?? "none");
+                            jsonConfig.AddNonNullValue("host", elem.streamSettings.tcpSettings?.header?.request?.headers?["Host"]?.FirstOrDefault());
+                            break;
+                        case "kcp":
+                            jsonConfig.Add("type", elem.streamSettings.kcpSettings?.header?.type ?? "none");
+                            jsonConfig.AddNonNullValue("path", elem.streamSettings.kcpSettings?.seed);
+                            break;
+                        case "ws":
+                            if (string.IsNullOrEmpty(elem.streamSettings.wsSettings?.host)) jsonConfig.AddNonNullValue("host", elem.streamSettings.wsSettings?.headers?.Host);
+                            else jsonConfig.AddNonNullValue("host", elem.streamSettings.wsSettings?.host);
+                            jsonConfig.AddNonNullValue("path", elem.streamSettings.wsSettings?.path);
+                            break;
+                        case "httpUpgrade":
+                            jsonConfig.AddNonNullValue("host", elem.streamSettings.httpupgradeSettings?.host);
+                            jsonConfig.AddNonNullValue("path", elem.streamSettings.httpupgradeSettings?.path);
+                            break;
+                        case "xhttp":
+                            jsonConfig.AddNonNullValue("host", elem.streamSettings.xhttpSettings?.host);
+                            jsonConfig.AddNonNullValue("path", elem.streamSettings.xhttpSettings?.path);
+                            jsonConfig.AddNonNullValue("type", elem.streamSettings.xhttpSettings?.mode);
+                            break;
+                        case "http":
+                            jsonConfig.AddNonNullValue("host", elem.streamSettings.httpSettings?.host?.FirstOrDefault());
+                            jsonConfig.AddNonNullValue("path", elem.streamSettings.httpSettings?.path);
+                            break;
+                        case "quic":
+                            jsonConfig.Add("type", elem.streamSettings.quicSettings?.header?.type ?? "none");
+                            jsonConfig.AddNonNullValue("host", elem.streamSettings.quicSettings?.security);
+                            jsonConfig.AddNonNullValue("path", elem.streamSettings.quicSettings?.key);
+                            break;
+                        case "grpc":
+                            jsonConfig.AddNonNullValue("host", elem.streamSettings.grpcSettings?.authority);
+                            jsonConfig.AddNonNullValue("path", elem.streamSettings.grpcSettings?.serviceName);
+                            if (elem.streamSettings.grpcSettings?.multiMode == true) jsonConfig.Add("type", "multi");
+                            break;
+                    }
+
+                    var thisConfig = string.Format("vmess://{0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonConfig.ToJsonString())));
+                    return (thisConfig, host, server.port.ToString());
+                });
+
                 var vlessData = outbounds.Where((elem) => elem.protocol == "vless").SelectMany((elem) =>
                 {
                     // Convert one outbound with several servers to several outbounds with one server each.
@@ -247,7 +349,7 @@ namespace LibFreeVPN.Servers
                     return (ub.Uri.ToString(), ub.Host, ub.Port.ToString());
                 });
 
-                return vlessData.Concat(vlessSboxData);
+                return vlessData.Concat(vmessData).Concat(vlessSboxData);
             }
 
             public override void AddExtraProperties(IDictionary<string, string> registry, string config)
