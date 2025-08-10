@@ -29,7 +29,7 @@ namespace LibFreeVPN.Providers
         public override bool RiskyRequests => true;
 
         public override bool HasProtocol(ServerProtocol protocol) =>
-            protocol == ServerProtocol.SSH && protocol == ServerProtocol.OpenVPN;
+            protocol == ServerProtocol.SSH || protocol == ServerProtocol.OpenVPN;
 
         private static readonly string s_RequestUri = Encoding.ASCII.GetString(Convert.FromBase64String("aHR0cHM6Ly9lLXNhbi12cG4uaW4ubmV0L1VwZGF0ZS9lLXNhbi12cG4uanNvbg=="));
 

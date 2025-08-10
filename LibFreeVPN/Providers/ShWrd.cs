@@ -133,5 +133,8 @@ namespace LibFreeVPN.Providers.ShWrd
         protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("c2Fuc29lMjAyMi9QTlRfVlBO"));
 
         protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("Y29uZmlnLmZpbGU="));
+
+        public override bool HasProtocol(ServerProtocol protocol) =>
+            protocol == ServerProtocol.OpenVPN;
     }
 }
