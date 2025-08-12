@@ -354,7 +354,15 @@ namespace LibFreeVPN.Servers
 
             public override void AddExtraProperties(IDictionary<string, string> registry, string config)
             {
-                if (config.StartsWith("vless://")) return;
+                if (config.StartsWith("vless://"))
+                {
+                    if (!registry.ContainsKey(ServerRegistryKeys.DisplayName))
+                    {
+                        var parsed = new Uri(config.Trim());
+                        registry.Add(ServerRegistryKeys.DisplayName, parsed.Fragment);
+                    }
+                    return;
+                }
 
                 registry.Add(ServerRegistryKeys.OriginalConfigType, "v2ray");
 
