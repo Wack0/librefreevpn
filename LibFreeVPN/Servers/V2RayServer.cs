@@ -1,5 +1,6 @@
 ﻿using LibFreeVPN.Servers.V2Ray;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -46,7 +47,14 @@ namespace LibFreeVPN.Servers
                 if (config.StartsWith("vless://"))
                 {
                     var parsed = new Uri(config.Trim());
-                    return (config.Trim(), parsed.Host, parsed.Port.ToString()).EnumerableSingle();
+
+                    var host = parsed.Host;
+                    var query = System.Web.HttpUtility.ParseQueryString(parsed.Query);
+                    string ws_host = null;
+                    if (query.AllKeys.Contains("host")) ws_host = query["host"];
+                    if (!string.IsNullOrEmpty(ws_host) && ws_host != host) host = string.Empty;
+
+                    return (config.Trim(), host, parsed.Port.ToString()).EnumerableSingle();
                 }
                 var json = JsonDocument.Parse(config);
                 if (json.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
@@ -159,6 +167,10 @@ namespace LibFreeVPN.Servers
                     }
 
                     var thisConfig = string.Format("vmess://{0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonConfig.ToJsonString())));
+
+                    string ws_host = null;
+                    if (jsonConfig.TryGetPropertyValue("host", out var wshost_prop)) ws_host = wshost_prop.ToString();
+                    if (!string.IsNullOrEmpty(ws_host) && ws_host != host) host = string.Empty;
                     return (thisConfig, host, server.port.ToString());
                 });
 
@@ -268,7 +280,12 @@ namespace LibFreeVPN.Servers
                     ub.Query = query.ToString();
                     if (!string.IsNullOrEmpty(remarks)) ub.Fragment = remarks;
 
-                    return (ub.Uri.ToString(), ub.Host, ub.Port.ToString());
+                    var host = ub.Host;
+                    string ws_host = null;
+                    if (query.AllKeys.Contains("host")) ws_host = query["host"];
+                    if (!string.IsNullOrEmpty(ws_host) && ws_host != host) host = string.Empty;
+
+                    return (ub.Uri.ToString(), host, ub.Port.ToString());
                 });
                 var vlessSboxData = outboundsSbox.Where((elem) => elem.type == "vless").Select((elem) =>
                 {
@@ -346,7 +363,13 @@ namespace LibFreeVPN.Servers
                     ub.Query = query.ToString();
                     if (!string.IsNullOrEmpty(remarks)) ub.Fragment = remarks;
 
-                    return (ub.Uri.ToString(), ub.Host, ub.Port.ToString());
+
+                    var host = ub.Host;
+                    string ws_host = null;
+                    if (query.AllKeys.Contains("host")) ws_host = query["host"];
+                    if (!string.IsNullOrEmpty(ws_host) && ws_host != host) host = string.Empty;
+
+                    return (ub.Uri.ToString(), host, ub.Port.ToString());
                 });
 
                 return vlessData.Concat(vmessData).Concat(vlessSboxData);

@@ -14,7 +14,8 @@ namespace LibFreeVPN
         public bool Equals(IVPNServer other)
         {
             if (Protocol != other.Protocol) return false;
-            if (Registry.TryGetValue(ServerRegistryKeys.Hostname, out var xHost) && other.Registry.TryGetValue(ServerRegistryKeys.Hostname, out var yHost))
+            // empty hostname means the actual hostname is unknown due to potential use of domain fronting (etc)
+            if (Registry.TryGetValue(ServerRegistryKeys.Hostname, out var xHost) && other.Registry.TryGetValue(ServerRegistryKeys.Hostname, out var yHost) && !string.IsNullOrEmpty(xHost) && !string.IsNullOrEmpty(yHost))
                 return xHost == yHost;
             return Config == other.Config;
         }
@@ -22,7 +23,7 @@ namespace LibFreeVPN
         public override int GetHashCode()
         {
             var hashProtocol = Protocol.GetHashCode();
-            if (!Registry.TryGetValue(ServerRegistryKeys.Hostname, out var strToHash))
+            if (!Registry.TryGetValue(ServerRegistryKeys.Hostname, out var strToHash) && !string.IsNullOrEmpty(strToHash))
                 strToHash = Config;
             return hashProtocol ^ strToHash.GetHashCode();
         }

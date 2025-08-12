@@ -108,6 +108,8 @@ namespace LibFreeVPN.Servers
                         };
 
                         var thisConfig = string.Format("vmess://{0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonConfig.ToJsonString())));
+                        var ws_host = dict.GetValue("ws-host");
+                        if (!string.IsNullOrEmpty(ws_host) && ws_host != hostname) hostname = string.Empty;
                         return (thisConfig, hostname, port);
                     });
 

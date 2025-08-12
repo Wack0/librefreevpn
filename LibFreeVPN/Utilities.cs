@@ -38,6 +38,7 @@ namespace LibFreeVPN
     {
         /// <summary>
         /// Hostname or IP address of the VPN server
+        /// If the config potentially uses some form of domain fronting supported by the client then this will be empty.
         /// </summary>
         public const string Hostname = "hostname";
         /// <summary>
