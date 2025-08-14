@@ -67,7 +67,7 @@ namespace LibFreeVPN.Providers
         protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
         {
             // single POST request gives out some JSON.
-            var httpClient = new HttpClient();
+            var httpClient = ServerUtilities.HttpClient;
             var reqContent = new ByteArrayContent(s_PostData);
             reqContent.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded");
             var post = await httpClient.PostAsync(

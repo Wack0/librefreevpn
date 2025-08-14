@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -79,6 +80,7 @@ namespace LibFreeVPN
     {
         public static IReadOnlyDictionary<string, string> EmptyRegistry { get; } = new Dictionary<string, string>();
         public static readonly string[] NewLines = new string[] { "\r\n", "\n" };
+        public static readonly HttpClient HttpClient = new HttpClient();
 
         /// <summary>
         /// Gets a value from a dictionary, returning a default value if the key doesn't exist.<br/>

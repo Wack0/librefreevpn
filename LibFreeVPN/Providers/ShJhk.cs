@@ -42,7 +42,7 @@ namespace LibFreeVPN.Providers.ShJhk
 
         protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
         {
-            var httpClient = new HttpClient();
+            var httpClient = ServerUtilities.HttpClient;
             // Get the single config file used here.
             var config = await httpClient.GetStringAsync(string.Format("https://raw.githubusercontent.com/{0}/main/{1}", RepoName, ConfigName));
 

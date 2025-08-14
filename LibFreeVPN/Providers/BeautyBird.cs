@@ -72,7 +72,7 @@ namespace LibFreeVPN.Providers
 
         private static async Task<IEnumerable<IVPNServer>> GetServersAsync(string url)
         {
-            var httpClient = new HttpClient();
+            var httpClient = ServerUtilities.HttpClient;
             var cipherText = Convert.FromBase64String(await httpClient.GetStringAsync(url));
             var crypto = s_AesAlgo.CreateDecryptor(s_AesKey, s_AesIv);
             var plainText = Encoding.UTF8.GetString(crypto.TransformFinalBlock(cipherText, 0, cipherText.Length));
@@ -98,7 +98,7 @@ namespace LibFreeVPN.Providers
 
         protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
         {
-            var httpClient = new HttpClient();
+            var httpClient = ServerUtilities.HttpClient;
             // Get the list of files in the root of the repository
             HttpResponseMessage listResponse = null;
             using (var listRequest = new HttpRequestMessage(HttpMethod.Get, string.Format("https://github.com/{0}/tree-commit-info/main", s_RepoName)))

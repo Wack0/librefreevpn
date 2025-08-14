@@ -63,7 +63,7 @@ namespace LibFreeVPN.Providers
         protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
         {
             // single POST request gives out some JSON.
-            var httpClient = new HttpClient();
+            var httpClient = ServerUtilities.HttpClient;
             var content = await httpClient.GetStringAsync(s_RequestUri);
             var json = JsonDocument.Parse(content);
 

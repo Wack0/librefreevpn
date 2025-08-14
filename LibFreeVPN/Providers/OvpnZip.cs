@@ -56,7 +56,7 @@ namespace LibFreeVPN.Providers.OvpnZip
         private async Task<IEnumerable<IVPNServer>> GetServersAsync(string url, string password)
         {
             // download and decrypt the zip
-            var httpClient = new HttpClient();
+            var httpClient = ServerUtilities.HttpClient;
             var zipBytes = DecryptZip(await httpClient.GetByteArrayAsync(url));
 
             var list = new List<KeyValuePair<string, string>>();
@@ -115,7 +115,7 @@ namespace LibFreeVPN.Providers.OvpnZip
 
         protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
         {
-            var httpClient = new HttpClient();
+            var httpClient = ServerUtilities.HttpClient;
             var reqContent = new ByteArrayContent(s_PostData);
             reqContent.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded");
             var post = await httpClient.PostAsync(

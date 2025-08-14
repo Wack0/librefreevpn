@@ -59,7 +59,7 @@ namespace LibFreeVPN.Providers
 
         private static async Task<IEnumerable<IVPNServer>> GetServersAsync(string url)
         {
-            var httpClient = new HttpClient();
+            var httpClient = ServerUtilities.HttpClient;
             var firstConf = await httpClient.GetStringAsync(url);
             var firstJson = JsonDocument.Parse(firstConf);
             if (firstJson.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
@@ -102,7 +102,7 @@ namespace LibFreeVPN.Providers
 
         protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
         {
-            var httpClient = new HttpClient();
+            var httpClient = ServerUtilities.HttpClient;
             // Get the list of files in the root of the repository
             HttpResponseMessage listResponse = null;
             using (var listRequest = new HttpRequestMessage(HttpMethod.Get, string.Format("https://github.com/{0}/tree-commit-info/master", s_RepoName)))

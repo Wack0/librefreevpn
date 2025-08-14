@@ -24,7 +24,7 @@ namespace LibFreeVPN.Providers.Vlist
 
         protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
         {
-            var httpClient = new HttpClient();
+            var httpClient = ServerUtilities.HttpClient;
             // Get the single config file used here.
             var config = await httpClient.GetStringAsync(RequestUri);
             config = Encoding.UTF8.GetString(Convert.FromBase64String(config));
