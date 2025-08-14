@@ -44,6 +44,18 @@ namespace LibFreeVPN.Servers
 
             public override IEnumerable<(string config, string hostname, string port)> ParseConfigFull(string config)
             {
+                if (config.StartsWith("vmess://"))
+                {
+                    var vmjson = JsonDocument.Parse(Encoding.UTF8.GetString(Convert.FromBase64String(config.Substring("vmess://".Length))));
+                    if (!vmjson.RootElement.TryGetPropertyString("add", out var host)) throw new InvalidDataException();
+                    if (!vmjson.RootElement.TryGetPropertyString("port", out var port)) throw new InvalidDataException();
+                    vmjson.RootElement.TryGetPropertyString("host", out var ws_host);
+
+                    if (!string.IsNullOrEmpty(ws_host) && ws_host != host) host = string.Empty;
+
+                    return (config.Trim(), host, port.ToString()).EnumerableSingle();
+                }
+
                 if (config.StartsWith("vless://"))
                 {
                     var parsed = new Uri(config.Trim());
@@ -377,6 +389,16 @@ namespace LibFreeVPN.Servers
 
             public override void AddExtraProperties(IDictionary<string, string> registry, string config)
             {
+                if (config.StartsWith("vmess://"))
+                {
+                    if (!registry.ContainsKey(ServerRegistryKeys.DisplayName))
+                    {
+                        var vmjson = JsonDocument.Parse(Encoding.UTF8.GetString(Convert.FromBase64String(config.Substring("vmess://".Length))));
+                        if (vmjson.RootElement.TryGetPropertyString("ps", out var vmPs)) registry.Add(ServerRegistryKeys.DisplayName, vmPs);
+                    }
+                    return;
+                }
+
                 if (config.StartsWith("vless://"))
                 {
                     if (!registry.ContainsKey(ServerRegistryKeys.DisplayName))

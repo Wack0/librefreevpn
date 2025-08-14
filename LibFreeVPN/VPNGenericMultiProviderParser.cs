@@ -46,6 +46,11 @@ namespace LibFreeVPN
         protected virtual string ServersArrayKey => "Servers";
 
         /// <summary>
+        /// Enumerator over any additional (optional) servers arrays.
+        /// </summary>
+        protected virtual IEnumerable<string> OptionalServersArrayKeys => Enumerable.Empty<string>();
+
+        /// <summary>
         /// Decrypt outer ciphertext (entire json object) if required
         /// </summary>
         /// <param name="ciphertext">Ciphertext</param>
@@ -100,7 +105,15 @@ namespace LibFreeVPN
             if (!json.RootElement.TryGetProperty(ServersArrayKey, out var servers)) throw new InvalidDataException();
             if (servers.ValueKind != JsonValueKind.Array) throw new InvalidDataException();
 
-            return servers.EnumerateArray().SelectMany((server) => TryParseServer(json, server, extraRegistry)).Distinct();
+            IEnumerable<JsonElement> serversEnum = servers.EnumerateArray();
+            foreach (var key in OptionalServersArrayKeys)
+            {
+                if (!json.RootElement.TryGetProperty(key, out var optional)) continue;
+                if (optional.ValueKind != JsonValueKind.Array) continue;
+                serversEnum = serversEnum.Concat(optional.EnumerateArray());
+            }
+
+            return serversEnum.SelectMany((server) => TryParseServer(json, server, extraRegistry)).Distinct();
         }
     }
 }

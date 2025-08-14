@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LibFreeVPN.Servers
@@ -36,7 +37,16 @@ namespace LibFreeVPN.Servers
         public SSHServer(string hostname, string port, string username, string password) : base(hostname, port, username, password)
         {
             var sb = new StringBuilder();
-            sb.AppendFormat("# Password: {0}", Registry[ServerRegistryKeys.Password]);
+            var registryPass = Registry[ServerRegistryKeys.Password];
+            if (registryPass.StartsWith("-----BEGIN ") && registryPass.Contains("-----END ") && registryPass.Contains(" PRIVATE KEY-----") && ServerUtilities.NewLines.Any((nl) => registryPass.Contains(nl)))
+            {
+                sb.AppendLine("# Private key:");
+                sb.AppendLine(registryPass);
+            }
+            else
+            {
+                sb.AppendFormat("# Password: {0}", Registry[ServerRegistryKeys.Password]);
+            }
             sb.AppendLine();
             // Some providers use shell metacharacters in usernames.
             // OpenSSH 9.6 (specifically, since this commit: https://github.com/openbsd/src/commit/ba05a7aae989020b8d05cc93cc6200109bba5a7b) disallows providing them, as part of a defense in depth approach.
