@@ -1,4 +1,5 @@
 ﻿using LibFreeVPN.Memecrypto;
+using LibFreeVPN.ProviderHelpers;
 using LibFreeVPN.Servers;
 using System;
 using System.Collections.Generic;
@@ -13,31 +14,13 @@ using System.Threading.Tasks;
 // All of these by same developer, same github repo used, same xxtea constant, differs only in xxtea keys.
 namespace LibFreeVPN.Providers.ShNo
 {
-    public abstract class ShNoBase<TParser> : VPNProviderBase
+    public abstract class ShNoBase<TParser> : VPNProviderGithubRepoFileBase<TParser>
         where TParser : SocksHttpWithOvpnParserTea<TParser>, new()
     {
-        
-        protected abstract string ConfigName { get; }
-
-        public override bool RiskyRequests => false;
-
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.OpenVPN || protocol == ServerProtocol.V2Ray;
 
-        private static readonly string s_RepoName = Encoding.ASCII.GetString(Convert.FromBase64String("QW51cmFrMjUzNC9vaG12cG4="));
-
-
-
-        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
-        {
-            var httpClient = ServerUtilities.HttpClient;
-            // Get the single config file used here.
-            var config = await httpClient.GetStringAsync(string.Format("https://raw.githubusercontent.com/{0}/main/{1}", s_RepoName, ConfigName));
-
-            // And try to parse it
-            var extraRegistry = CreateExtraRegistry();
-            return SocksHttpWithOvpnParserTea<TParser>.ParseConfig(config, extraRegistry);
-        }
+        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("QW51cmFrMjUzNC9vaG12cG4="));
     }
 
     public sealed class ShNoo : ShNoBase<ShNoo.Parser>

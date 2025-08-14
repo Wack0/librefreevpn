@@ -1,4 +1,5 @@
-﻿using LibFreeVPN.Servers;
+﻿using LibFreeVPN.ProviderHelpers;
+using LibFreeVPN.Servers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,10 +12,9 @@ using System.Threading.Tasks;
 namespace LibFreeVPN.Providers.Vlist
 {
     // Android apps. Base64 encoded list of v2ray urls.
-    public abstract class VlistBase : VPNProviderBase
+    public abstract class VlistBase : VPNProviderHttpGetBase
     {
-        protected abstract string RequestUri { get; }
-
+        // non-risky request by default: google drive
         public override bool RiskyRequests => false;
 
         public override bool HasProtocol(ServerProtocol protocol)
@@ -22,20 +22,19 @@ namespace LibFreeVPN.Providers.Vlist
             return protocol == ServerProtocol.V2Ray;
         }
 
-        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
+        protected override Task<IEnumerable<IVPNServer>> GetServersAsyncImpl(string config)
         {
-            var httpClient = ServerUtilities.HttpClient;
-            // Get the single config file used here.
-            var config = await httpClient.GetStringAsync(RequestUri);
+            // Base64 decode the config
             config = Encoding.UTF8.GetString(Convert.FromBase64String(config));
 
             // And try to parse it
-            return config.Split('\n')
+            return Task.FromResult<IEnumerable<IVPNServer>>(
+                config.Split('\n')
                 .Where((line) => !string.IsNullOrEmpty(line))
                 .SelectMany((line) => V2RayServer.ParseConfigFull(line, CreateExtraRegistry()))
                 .Where((server) => server.Registry[ServerRegistryKeys.Hostname] != "0.0.0.0")
                 .Distinct()
-                .ToList();
+                .ToList());
         }
     }
 

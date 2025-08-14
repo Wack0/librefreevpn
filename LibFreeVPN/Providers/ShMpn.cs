@@ -1,4 +1,5 @@
 ﻿using LibFreeVPN.Memecrypto;
+using LibFreeVPN.ProviderHelpers;
 using LibFreeVPN.Servers;
 using System;
 using System.Collections.Generic;
@@ -275,47 +276,26 @@ namespace LibFreeVPN.Providers.ShMpn
 
     public sealed class ParserRot : ParserBaseRot<ParserRot> { }
 
-    public abstract class ShMpnBase<TParser> : VPNProviderBase
+    public abstract class ShMpnBase<TParser> : VPNProviderGithubRepoFileBase<TParser>
         where TParser : ParserBase<TParser>, new()
     {
-        protected virtual string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("TWluYURpTmFiaWwvdXBkYXRlLmxpbms="));
-        protected abstract string ConfigName { get; }
-
-        public override bool RiskyRequests => false;
+        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("TWluYURpTmFiaWwvdXBkYXRlLmxpbms="));
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.V2Ray;
-
-
-
-        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
-        {
-            var httpClient = ServerUtilities.HttpClient;
-            // Get the single config file used here.
-            var config = await httpClient.GetStringAsync(string.Format("https://raw.githubusercontent.com/{0}/main/{1}", RepoName, ConfigName));
-
-            // And try to parse it
-            var extraRegistry = CreateExtraRegistry();
-            return ParserBase<TParser>.ParseConfig(config, extraRegistry);
-        }
     }
 
     public abstract class ShMpnRotBase<TParser> : ShMpnBase<TParser>
         where TParser : ParserBaseRot<TParser>, new()
     {
-        private static ParserConfigRot s_FirstParser = new ParserConfigRot();
-
         protected virtual string SecondConfigUrlKey => "ServerLink";
         protected virtual string InnerSeedKey => "ServerPassWD";
 
-        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
+        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl(string config)
         {
-            var httpClient = ServerUtilities.HttpClient;
-            // Get the first config file used here.
-            var config = await httpClient.GetStringAsync(string.Format("https://raw.githubusercontent.com/{0}/main/{1}", RepoName, ConfigName));
-
-            // Decrypt it.
-            config = s_FirstParser.DecryptString(config);
+            // Decrypt the obtained config.
+            var firstParser = new ParserConfigRot();
+            config = firstParser.DecryptString(config);
 
             // Parse it to get the real key-id and the actual config url.
             var json = JsonDocument.Parse(config);
@@ -323,27 +303,27 @@ namespace LibFreeVPN.Providers.ShMpn
             if (!json.RootElement.TryGetPropertyString(SecondConfigUrlKey, out var secondConfigUrl)) throw new InvalidDataException();
             if (!json.RootElement.TryGetPropertyString(InnerSeedKey, out var innerSeedKey)) throw new InvalidDataException();
 
-            innerSeedKey = s_FirstParser.DecryptString(innerSeedKey);
+            innerSeedKey = firstParser.DecryptString(innerSeedKey);
 
-            s_FirstParser.OverrideOuterKeyId = innerSeedKey;
-            secondConfigUrl = s_FirstParser.DecryptString(secondConfigUrl);
+            firstParser.OverrideOuterKeyId = innerSeedKey;
+            secondConfigUrl = firstParser.DecryptString(secondConfigUrl);
 
             // If this isn't supposed to make risky requests, ensure the domain matches.
             if (!RiskyRequests)
             {
-                // BUGBUG: change to make sure first URL matches second URL after some refactoring to other types
-                if (!secondConfigUrl.StartsWith("https://raw.githubusercontent.com/")) throw new InvalidDataException();
+                var parsedUrl = new Uri(secondConfigUrl);
+                var firstUrl = new Uri(RequestUri);
+                if (firstUrl.Host != parsedUrl.Host) throw new InvalidDataException();
             }
 
             // Get the second config.
-            config = await httpClient.GetStringAsync(secondConfigUrl);
+            config = await ServerUtilities.HttpClient.GetStringAsync(secondConfigUrl);
 
             // Ensure the parser is set to use the correct key-id for this thread.
             ParserBaseRot<TParser>.s_CurrentOuterKey.Value = innerSeedKey;
 
             // Try to parse the config.
-            var extraRegistry = CreateExtraRegistry();
-            return ParserBaseRot<TParser>.ParseConfig(config, extraRegistry);
+            return await GetServersAsyncImpl<TParser>(config);
         }
     }
 

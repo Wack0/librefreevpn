@@ -1,4 +1,5 @@
 ﻿using LibFreeVPN.Memecrypto;
+using LibFreeVPN.ProviderHelpers;
 using LibFreeVPN.Servers;
 using System;
 using System.Collections.Generic;
@@ -15,33 +16,18 @@ using System.Threading.Tasks;
 // Original apps use cname to github pages, this implementation hits the repo directly.
 namespace LibFreeVPN.Providers.ShWrd
 {
-    public abstract class ShWrdBase<TParser> : VPNProviderBase
+    public abstract class ShWrdBase<TParser> : VPNProviderGithubRepoFileBase<TParser>
         where TParser : SocksHttpParser<TParser>, new()
     {
 
-        protected virtual string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("RmlsZS5qc29u"));
-
-        public override bool RiskyRequests => false;
+        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("RmlsZS5qc29u"));
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.OpenVPN || protocol == ServerProtocol.V2Ray;
 
 
 
-        protected virtual string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("aHVubWFpL3dhcnJpbmdkYQ=="));
-
-
-
-        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
-        {
-            var httpClient = ServerUtilities.HttpClient;
-            // Get the single config file used here.
-            var config = await httpClient.GetStringAsync(string.Format("https://raw.githubusercontent.com/{0}/main/{1}", RepoName, ConfigName));
-
-            // And try to parse it
-            var extraRegistry = CreateExtraRegistry();
-            return SocksHttpParser<TParser>.ParseConfig(config, extraRegistry);
-        }
+        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("aHVubWFpL3dhcnJpbmdkYQ=="));
     }
 
     public sealed class ShWrdPk : ShWrdBase<ShWrdPk.Parser>

@@ -1,4 +1,5 @@
 ﻿using LibFreeVPN.Memecrypto;
+using LibFreeVPN.ProviderHelpers;
 using LibFreeVPN.Servers;
 using System;
 using System.Collections.Generic;
@@ -11,9 +12,9 @@ namespace LibFreeVPN.Providers
 {
     // Android app. SocksHttp using SSH + v2ray.
 
-    public sealed class ShIo : VPNProviderBase
+    public sealed class ShIo : VPNProviderHttpGetBase<ShIo.Parser>
     {
-        private sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
+        public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
             protected override string OvpnKey => "setOpenVPN";
 
@@ -24,23 +25,9 @@ namespace LibFreeVPN.Providers
 
         public override string SampleVersion => "4.0";
 
-        public override bool RiskyRequests => true;
-
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.V2Ray;
 
-        private static readonly string s_RequestUri = Encoding.ASCII.GetString(Convert.FromBase64String("aHR0cHM6Ly9pb3Zwbi5tZS9hcHAvY29uZmlnL2hkaGRoZGRkZC5waHA="));
-
-
-        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
-        {
-            var httpClient = ServerUtilities.HttpClient;
-            // Get the single config file used here.
-            var config = await httpClient.GetStringAsync(s_RequestUri);
-
-            // And try to parse it
-            var extraRegistry = CreateExtraRegistry();
-            return Parser.ParseConfig(config, extraRegistry);
-        }
+        protected override string RequestUri => Encoding.ASCII.GetString(Convert.FromBase64String("aHR0cHM6Ly9pb3Zwbi5tZS9hcHAvY29uZmlnL2hkaGRoZGRkZC5waHA="));
     }
 }

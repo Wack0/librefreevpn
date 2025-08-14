@@ -1,4 +1,5 @@
-﻿using LibFreeVPN.Servers;
+﻿using LibFreeVPN.ProviderHelpers;
+using LibFreeVPN.Servers;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,9 +12,9 @@ using System.Threading.Tasks;
 namespace LibFreeVPN.Providers
 {
     // Android app, distributed outside of Play Store. SocksHttp fork. SSH + v2ray (v2ray can domain front through zoom)
-    public sealed class ShAzsm : VPNProviderBase
+    public sealed class ShAzsm : VPNProviderGithubRepoFileBase<ShAzsm.Parser>
     {
-        private sealed class Parser : SocksHttpParser<Parser>
+        public sealed class Parser : SocksHttpParser<Parser>
         {
             protected override string CountryNameKey => "FLAG";
             protected override string V2RayKey => "v2rayJson";
@@ -50,24 +51,10 @@ namespace LibFreeVPN.Providers
 
         public override string SampleVersion => "1.1";
 
-        public override bool RiskyRequests => false;
-
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.V2Ray;
 
-        private static readonly string s_RepoName = Encoding.ASCII.GetString(Convert.FromBase64String("U1VTSUUtMjAyMy9KU09O"));
-        private static readonly string s_ConfigName = Encoding.ASCII.GetString(Convert.FromBase64String("ZmlsZXMvY29uZmlnLmpzb24="));
-
-
-        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
-        {
-            var httpClient = ServerUtilities.HttpClient;
-            // Get the single config file used here.
-            var config = await httpClient.GetStringAsync(string.Format("https://raw.githubusercontent.com/{0}/main/{1}", s_RepoName, s_ConfigName));
-
-            // And try to parse it
-            var extraRegistry = CreateExtraRegistry();
-            return Parser.ParseConfig(config, extraRegistry);
-        }
+        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("U1VTSUUtMjAyMy9KU09O"));
+        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("ZmlsZXMvY29uZmlnLmpzb24="));
     }
 }
