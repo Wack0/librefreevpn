@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -67,9 +68,26 @@ namespace LibFreeVPN
 
         protected abstract IEnumerable<IVPNServer> ParseServer(JsonDocument root, JsonElement server, IReadOnlyDictionary<string, string> extraRegistry);
 
+        private static bool MethodIsDerived(MethodInfo baseMethod, MethodInfo derivedMethod)
+        {
+            return baseMethod.DeclaringType != derivedMethod.DeclaringType && baseMethod.GetBaseDefinition() == derivedMethod.GetBaseDefinition();
+        }
+
+        private static readonly Type[] s_DecryptInnerArgs =
+        {
+            typeof(string), typeof(string)
+        };
+
+        private static readonly bool s_DecryptInnerIsDerived = MethodIsDerived(
+            typeof(VPNJsonArrInObjMultiProviderParser<TParser>).GetMethod("DecryptInner", BindingFlags.Instance | BindingFlags.NonPublic, null, s_DecryptInnerArgs, null),
+            typeof(TParser).GetMethod("DecryptInner", BindingFlags.Instance | BindingFlags.NonPublic, null, s_DecryptInnerArgs, null)
+        );
+
         private JsonElement DecryptServer(JsonElement server)
         {
             if (server.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
+            // If DecryptInner wasn't overridden then this is a no-op anyway.
+            if (!s_DecryptInnerIsDerived) return server;
             var ret = new JsonObject();
             foreach (var elem in server.EnumerateObject())
             {

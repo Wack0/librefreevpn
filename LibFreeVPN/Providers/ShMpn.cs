@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 // Android apps. SocksHttp using SSH + V2ray.
 namespace LibFreeVPN.Providers.ShMpn
 {
-    public abstract class ParserBase<TType> : SocksHttpParser<TType>
+    public abstract class ParserBase<TType> : SocksHttpParserAesPbkdf2<TType>
         where TType : ParserBase<TType>, new()
     {
         protected override IEnumerable<string> OptionalServersArrayKeys => "Networks".EnumerableSingle();
@@ -27,36 +27,65 @@ namespace LibFreeVPN.Providers.ShMpn
 
         protected virtual string SSHPrivkeyKey => "servermessage";
 
-        protected abstract string OuterKeyId { get; }
-        protected abstract uint[] InnerKey { get; }
-
-        protected virtual HashAlgorithmName HashAlgorithm => HashAlgorithmName.SHA256;
-        protected virtual int PbkdfRounds => 5000;
-
-        protected override string DecryptOuter(string ciphertext)
+        protected override IEnumerable<IVPNServer> ParseServer(JsonDocument root, JsonElement server, IReadOnlyDictionary<string, string> passedExtraRegistry)
         {
-            var bytes = Convert.FromBase64String(ciphertext);
-            var seed = new byte[0x10];
-            var iv = new byte[0x10];
-            var cipherTextBytes = new byte[bytes.Length - 0x20];
-            Buffer.BlockCopy(bytes, 0, seed, 0, 0x10);
-            Buffer.BlockCopy(bytes, 0x10, iv, 0, 0x10);
-            Buffer.BlockCopy(bytes, 0x20, cipherTextBytes, 0, cipherTextBytes.Length);
-
-            using (var aes = new AesManaged())
+            string serverType = null;
+            if (!server.TryGetProperty(ServerTypeKey, out var serverTypeJson))
             {
-                aes.BlockSize = 128;
-                aes.KeySize = 256;
-                aes.Padding = PaddingMode.PKCS7;
-                byte[] key = null;
-                using (var pbkdf2 = new Pbkdf2(OuterKeyId, seed, PbkdfRounds, HashAlgorithm))
-                    key = pbkdf2.GetBytes(0x20);
-                using (var dec = aes.CreateDecryptor(key, iv))
+                // This is Network element, aka SSH tunnel
+                serverType = "ssh";
+            }
+            else
+            {
+                switch (serverTypeJson.ValueKind)
                 {
-                    return Encoding.UTF8.GetString(dec.TransformFinalBlock(cipherTextBytes, 0, cipherTextBytes.Length));
+                    case JsonValueKind.String:
+                        serverType = serverTypeJson.GetString().ToLower() == "true" ? "v2ray" : "unknown";
+                        break;
+                    case JsonValueKind.True:
+                        serverType = "v2ray";
+                        break;
+                    case JsonValueKind.False:
+                        serverType = "unknown";
+                        break;
+                    default:
+                        throw new InvalidDataException();
                 }
             }
+
+            string hostname, port;
+            string username = null, password = null, v2ray = null;
+            string name, country;
+
+            if (!server.TryGetPropertyString(ServerNameKey, out name)) throw new InvalidDataException();
+
+            var extraRegistry = new Dictionary<string, string>();
+            foreach (var kv in passedExtraRegistry) extraRegistry.Add(kv.Key, kv.Value);
+            extraRegistry.Add(ServerRegistryKeys.DisplayName, name);
+            if (server.TryGetPropertyString(CountryNameKey, out country))  extraRegistry.Add(ServerRegistryKeys.Country, country);
+
+            switch (serverType.ToLower())
+            {
+                case "ssh": // ssh
+                    if (!server.TryGetPropertyString(HostnameKey, out hostname)) throw new InvalidDataException();
+                    if (!server.TryGetPropertyString(PortKey, out port)) throw new InvalidDataException();
+                    if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
+                    server.TryGetPropertyString(PasswordKey, out password);
+                    if (string.IsNullOrEmpty(password) && !server.TryGetPropertyString(SSHPrivkeyKey, out password)) throw new InvalidDataException();
+                    return hostname.Split(';').Select((host) => new SSHServer(host, port, username, password, extraRegistry)).ToList();
+                case "v2ray": // v2ray
+                    if (!server.TryGetPropertyString(V2RayKey, out v2ray)) throw new InvalidDataException();
+                    return V2RayServer.ParseConfigFull(v2ray, extraRegistry);
+                default:
+                    throw new InvalidDataException();
+            }
         }
+    }
+
+    public abstract class ParserBaseXtea<TType> : ParserBase<TType>
+        where TType : ParserBaseXtea<TType>, new()
+    {
+        protected abstract uint[] InnerKey { get; }
 
         private static void XteaDecryptBlock(uint num_rounds, uint[] v, uint[] key)
         {
@@ -123,60 +152,6 @@ namespace LibFreeVPN.Providers.ShMpn
 
             return DecryptInner(ciphertext);
         }
-
-        protected override IEnumerable<IVPNServer> ParseServer(JsonDocument root, JsonElement server, IReadOnlyDictionary<string, string> passedExtraRegistry)
-        {
-            string serverType = null;
-            if (!server.TryGetProperty(ServerTypeKey, out var serverTypeJson))
-            {
-                // This is Network element, aka SSH tunnel
-                serverType = "ssh";
-            }
-            else
-            {
-                switch (serverTypeJson.ValueKind)
-                {
-                    case JsonValueKind.String:
-                        serverType = serverTypeJson.GetString().ToLower() == "true" ? "v2ray" : "unknown";
-                        break;
-                    case JsonValueKind.True:
-                        serverType = "v2ray";
-                        break;
-                    case JsonValueKind.False:
-                        serverType = "unknown";
-                        break;
-                    default:
-                        throw new InvalidDataException();
-                }
-            }
-
-            string hostname, port;
-            string username = null, password = null, v2ray = null;
-            string name, country;
-
-            if (!server.TryGetPropertyString(ServerNameKey, out name)) throw new InvalidDataException();
-
-            var extraRegistry = new Dictionary<string, string>();
-            foreach (var kv in passedExtraRegistry) extraRegistry.Add(kv.Key, kv.Value);
-            extraRegistry.Add(ServerRegistryKeys.DisplayName, name);
-            if (server.TryGetPropertyString(CountryNameKey, out country))  extraRegistry.Add(ServerRegistryKeys.Country, country);
-
-            switch (serverType.ToLower())
-            {
-                case "ssh": // ssh
-                    if (!server.TryGetPropertyString(HostnameKey, out hostname)) throw new InvalidDataException();
-                    if (!server.TryGetPropertyString(PortKey, out port)) throw new InvalidDataException();
-                    if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
-                    server.TryGetPropertyString(PasswordKey, out password);
-                    if (string.IsNullOrEmpty(password) && !server.TryGetPropertyString(SSHPrivkeyKey, out password)) throw new InvalidDataException();
-                    return hostname.Split(';').Select((host) => new SSHServer(host, port, username, password, extraRegistry)).ToList();
-                case "v2ray": // v2ray
-                    if (!server.TryGetPropertyString(V2RayKey, out v2ray)) throw new InvalidDataException();
-                    return V2RayServer.ParseConfigFull(v2ray, extraRegistry);
-                default:
-                    throw new InvalidDataException();
-            }
-        }
     }
 
     public abstract class ParserBaseRot<TType> : ParserBase<TType>
@@ -197,10 +172,8 @@ namespace LibFreeVPN.Providers.ShMpn
 
         internal static ThreadLocal<string> s_CurrentOuterKey = new ThreadLocal<string>();
         protected override HashAlgorithmName HashAlgorithm => HashAlgorithmName.SHA1;
-        protected override int PbkdfRounds => 10000;
 
         protected override string OuterKeyId => s_CurrentOuterKey.Value;
-        protected override uint[] InnerKey => new uint[4];
 
         private static string ReverseRot1(string text, int offset, int length)
         {
@@ -331,10 +304,10 @@ namespace LibFreeVPN.Providers.ShMpn
 
     public sealed class ShMpnBee : ShMpnBase<ShMpnBee.Parser>
     {
-        public sealed class Parser : ParserBase<Parser>
+        public sealed class Parser : ParserBaseXtea<Parser>
         {
             protected override string OuterKeyId => Encoding.ASCII.GetString(Convert.FromBase64String("MTk4Nj9AUkNBMTk4Nj9AUkNB"));
-
+            protected override int PbkdfRounds => 5000;
             protected override uint[] InnerKey => new uint[] { 0xA56BABCD, 0, 0, 0 };
         }
 

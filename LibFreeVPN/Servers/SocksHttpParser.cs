@@ -345,4 +345,37 @@ namespace LibFreeVPN.Servers
             return DecryptAes(ciphertext, s_InnerKey);
         }
     }
+
+    public abstract class SocksHttpParserAesPbkdf2<TType> : SocksHttpParser<TType>
+        where TType : SocksHttpParserAesPbkdf2<TType>, new()
+    {
+        protected abstract string OuterKeyId { get; }
+        protected virtual HashAlgorithmName HashAlgorithm => HashAlgorithmName.SHA256;
+        protected virtual int PbkdfRounds => 10000;
+
+        protected override string DecryptOuter(string ciphertext)
+        {
+            var bytes = Convert.FromBase64String(ciphertext);
+            var seed = new byte[0x10];
+            var iv = new byte[0x10];
+            var cipherTextBytes = new byte[bytes.Length - 0x20];
+            Buffer.BlockCopy(bytes, 0, seed, 0, 0x10);
+            Buffer.BlockCopy(bytes, 0x10, iv, 0, 0x10);
+            Buffer.BlockCopy(bytes, 0x20, cipherTextBytes, 0, cipherTextBytes.Length);
+
+            using (var aes = new AesManaged())
+            {
+                aes.BlockSize = 128;
+                aes.KeySize = 256;
+                aes.Padding = PaddingMode.PKCS7;
+                byte[] key = null;
+                using (var pbkdf2 = new Pbkdf2(OuterKeyId, seed, PbkdfRounds, HashAlgorithm))
+                    key = pbkdf2.GetBytes(0x20);
+                using (var dec = aes.CreateDecryptor(key, iv))
+                {
+                    return Encoding.UTF8.GetString(dec.TransformFinalBlock(cipherTextBytes, 0, cipherTextBytes.Length));
+                }
+            }
+        }
+    }
 }
