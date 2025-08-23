@@ -26,6 +26,23 @@ namespace LibFreeVPN.Providers.ShMpn
         protected override string PasswordKey => "XPass";
 
         protected virtual string SSHPrivkeyKey => "servermessage";
+        protected static string ReverseRot1(string text, int offset, int length)
+        {
+            var chars = text.ToCharArray();
+            for (int i = 0; i < length; i++)
+            {
+                var idx = i + offset;
+                var chr = chars[idx];
+                if (chr >= '0' && chr <= '9')
+                {
+                    chars[idx] = (char)((((chr - '0') + 9) % 10) + '0');
+                }
+                if (chr < 'A' || (chr >= 0x5B && chr <= 0x60) || chr > 'z') continue;
+                int baseVal = 'A' + (chr & 0x20);
+                chars[idx] = (char)(((chr - baseVal + 25) % 26) + baseVal);
+            }
+            return new string(chars);
+        }
 
         protected override IEnumerable<IVPNServer> ParseServer(JsonDocument root, JsonElement server, IReadOnlyDictionary<string, string> passedExtraRegistry)
         {
@@ -146,11 +163,24 @@ namespace LibFreeVPN.Providers.ShMpn
             return Encoding.UTF8.GetString(plaintext).TrimEnd('\x00');
         }
 
+
+
         protected override string DecryptInner(string jsonKey, string ciphertext)
         {
             if (jsonKey != HostnameKey && jsonKey != UsernameKey && jsonKey != PasswordKey && jsonKey != SSHPrivkeyKey && jsonKey != V2RayKey) return ciphertext;
 
-            return DecryptInner(ciphertext);
+            ciphertext = DecryptInner(ciphertext);
+
+            if (jsonKey != SSHPrivkeyKey) return ciphertext;
+
+            var start = ciphertext.IndexOf("KEY-----");
+            if (start == -1) return ciphertext;
+            ciphertext = ciphertext.Replace("\\n", "\n");
+            start = ciphertext.IndexOf("KEY-----");
+            start += "KEY-----".Length;
+            var end = ciphertext.IndexOf("-----", start);
+            if (end == -1) return ciphertext;
+            return ReverseRot1(ciphertext, start, end - start);
         }
     }
 
@@ -174,20 +204,6 @@ namespace LibFreeVPN.Providers.ShMpn
         protected override HashAlgorithmName HashAlgorithm => HashAlgorithmName.SHA1;
 
         protected override string OuterKeyId => s_CurrentOuterKey.Value;
-
-        private static string ReverseRot1(string text, int offset, int length)
-        {
-            var chars = text.ToCharArray();
-            for (int i = 0; i < length; i++)
-            {
-                var idx = i + offset;
-                var chr = chars[idx];
-                if (chr < 'A' || chr == 0x60 || chr > 'z') continue;
-                int baseVal = 'A' + (chr & 0x20);
-                chars[idx] = (char)(((chr - baseVal + 25) % 26) + baseVal);
-            }
-            return new string(chars);
-        }
 
         protected override string DecryptInner(string jsonKey, string ciphertext)
         {
