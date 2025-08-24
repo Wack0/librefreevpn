@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net.Http;
@@ -134,5 +135,29 @@ namespace LibFreeVPN
         }
 
         public static IEnumerable<TValue> EnumerableSingle<TValue>(this TValue val) => new TValue[] { val };
+    }
+
+    internal static class LazySingleton<T>
+    {
+        private static ConcurrentDictionary<Func<T>, T> s_Objects = new ConcurrentDictionary<Func<T>, T>();
+
+        internal static T Get(Func<T> func)
+        {
+            return s_Objects.GetOrAdd(func, (key) =>
+            {
+                var v = key();
+                if (typeof(T) == typeof(string)) v = (T)(object)string.Intern((string)(object)v);
+                return v;
+            });
+        }
+    }
+
+    internal static class LazySingleton
+    {
+        internal static T SingleInstance<T>(this Func<T> func) => LazySingleton<T>.Get(func);
+
+        internal static byte[] FromBase64String(this string base64String) => LazySingleton<byte[]>.Get(() => Convert.FromBase64String(base64String));
+
+        internal static string FromBase64String(this Encoding encoding, string base64string) => LazySingleton<string>.Get(() => encoding.GetString(Convert.FromBase64String(base64string)));
     }
 }
