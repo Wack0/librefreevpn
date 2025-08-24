@@ -144,6 +144,11 @@ namespace LibFreeVPN
             internal static ConcurrentDictionary<(TValue, Func<TValue, T>), T> s_Objects = new ConcurrentDictionary<(TValue, Func<TValue, T>), T>();
         }
 
+        private static class TypeKeyedObjects<TValue>
+        {
+            internal static ConcurrentDictionary<(Type, Func<TValue, T>), T> s_Objects = new ConcurrentDictionary<(Type, Func<TValue, T>), T>();
+        }
+
         internal static ConcurrentDictionary<Func<T>, T> s_NonKeyedObjects = new ConcurrentDictionary<Func<T>, T>();
 
         private static T Intern(T v)
@@ -177,11 +182,26 @@ namespace LibFreeVPN
         {
             return KeyedObjects<TData>.s_Objects.GetOrAdd((data, func), GetImpl);
         }
+
+        /// <summary>
+        /// Gets a lazy singleton through the type-keyed dictionary using the provided delegate and data argument, calling it to initialise if required.
+        /// </summary>
+        /// <param name="func">Delegate that takes a single parameter to initialise and returns a value.</param>
+        /// <param name="data">The parameter of the delegate, used to initialise the value.</param>
+        /// <returns>The initialised value.</returns>
+        internal static T GetByType<TData>(Func<TData, T> func, TData data)
+        {
+            return TypeKeyedObjects<TData>.s_Objects.GetOrAdd((data.GetType(), func), (kv) => Intern(kv.Item2(data)));
+        }
     }
 
     internal static class LazySingleton
     {
         internal static T SingleInstance<T>(this Func<T> func) => LazySingleton<T>.Get(func);
+
+        internal static T SingleInstance<T, TData>(this TData data, Func<TData, T> func) => LazySingleton<T>.Get(func, data);
+
+        internal static T SingleInstanceByType<T, TData>(this TData data, Func<TData, T> func) => LazySingleton<T>.GetByType(func, data);
 
         internal static byte[] FromBase64String(this string base64String) => LazySingleton<byte[]>.Get(Convert.FromBase64String, base64String);
 

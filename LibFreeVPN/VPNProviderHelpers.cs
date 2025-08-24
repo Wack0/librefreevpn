@@ -37,7 +37,10 @@ namespace LibFreeVPN.ProviderHelpers
         protected abstract string RepoName { get; }
         protected virtual string BranchName => "main";
         protected abstract string ConfigName { get; }
-        protected override string RequestUri => string.Format("https://raw.githubusercontent.com/{0}/{1}/{2}", RepoName, BranchName, ConfigName);
+
+        private static string RequestUriGetter(VPNProviderGithubRepoFileBase self)
+            => string.Format("https://raw.githubusercontent.com/{0}/{1}/{2}", self.RepoName, self.BranchName, self.ConfigName);
+        protected override string RequestUri => this.SingleInstanceByType(RequestUriGetter);
 
         public override bool RiskyRequests => false;
     }
