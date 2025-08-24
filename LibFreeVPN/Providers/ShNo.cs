@@ -20,62 +20,62 @@ namespace LibFreeVPN.Providers.ShNo
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.OpenVPN || protocol == ServerProtocol.V2Ray;
 
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("QW51cmFrMjUzNC9vaG12cG4="));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("QW51cmFrMjUzNC9vaG12cG4=");
     }
 
     public sealed class ShNoo : ShNoBase<ShNoo.Parser>
     {
         public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
-            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("b2htMDkwNTI5"));
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("b2htMDkwNTI5");
         }
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS53aWxsYmVhbG9uZS5vaG12cG4=";
 
         public override string SampleVersion => "4.5";
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("b2htLmpzb24="));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("b2htLmpzb24=");
     }
 
     public sealed class ShNosa : ShNoBase<ShNosa.Parser>
     {
         public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
-            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("c2F0aHUyMDA1MzA="));
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("c2F0aHUyMDA1MzA=");
         }
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5wdWJsaWNzZXJ2aWNlc3NoLnNhdGh1dnBu";
 
         public override string SampleVersion => "2.5";
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("c2F0aHUuanNvbg=="));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("c2F0aHUuanNvbg==");
     }
 
     public sealed class ShNona : ShNoBase<ShNona.Parser>
     {
         public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
-            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("bmFtbzA5MDUyOQ=="));
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("bmFtbzA5MDUyOQ==");
         }
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5hcHB4cmF5c2VydmljZS5uYW1vdnBu";
 
         public override string SampleVersion => "2.5";
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("bmFtby5qc29u"));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("bmFtby5qc29u");
     }
 
     public sealed class ShNogo : ShNoBase<ShNogo.Parser>
     {
         public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
-            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("Z29vZHZwbjA5MDUyOQ=="));
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("Z29vZHZwbjA5MDUyOQ==");
         }
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5vdnBuc2V2aWNlLmdvb2R2cG4=";
 
         public override string SampleVersion => "2.5";
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("Z29vZHZwbi5qc29u"));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("Z29vZHZwbi5qc29u");
     }
 }

@@ -20,7 +20,7 @@ namespace LibFreeVPN.Providers.ShV2x
         protected override string V2RayKey => "Connection_Config";
         protected override string ServerTypeKey => "OTHER";
 
-        protected override string OuterKeyId => Encoding.ASCII.GetString(Convert.FromBase64String("cFhQV1VqRm0waFc2MTJ0YXY1RXo="));
+        protected override string OuterKeyId => Encoding.ASCII.FromBase64String("cFhQV1VqRm0waFc2MTJ0YXY1RXo=");
         protected override IEnumerable<IVPNServer> ParseServer(JsonDocument root, JsonElement server, IReadOnlyDictionary<string, string> passedExtraRegistry)
         {
             string name, country, v2ray;
@@ -61,9 +61,9 @@ namespace LibFreeVPN.Providers.ShV2x
 
         public override string SampleVersion => "1.9.20";
 
-        protected override string RequestUri => Encoding.ASCII.GetString(Convert.FromBase64String(
+        protected override string RequestUri => Encoding.ASCII.FromBase64String(
             "aHR0cHM6Ly9meGdvbGRlbnNpZ25hbHMuY29tL1RvcFZQTi92Mi9hcGkvbWFpbi5waHA/YWNjZXNzX3Rva2VuPSZHZXRTZXJ2ZXJMaXN0PSZkZWZ1YWx0U2VydmVySUQ9JmRldmljZV9pZD0maXNwPU1UTiZ2ZXJzaW9uPTU1NSZpc1BhcnRuZXJzaGlwPUZBTFNF"
-        ));
+        );
 
         public override bool HasProtocol(ServerProtocol protocol)
             => protocol == ServerProtocol.V2Ray;
@@ -77,9 +77,9 @@ namespace LibFreeVPN.Providers.ShV2x
 
         public override string SampleVersion => "1.9.16.6";
 
-        protected override string RequestUri => Encoding.ASCII.GetString(Convert.FromBase64String(
+        protected override string RequestUri => Encoding.ASCII.FromBase64String(
             "aHR0cHM6Ly9hcGkudjJuZXQubGl2ZS92Mm5ldC92Mi9hcGkvbWFpbi5waHA/YWNjZXNzX3Rva2VuPSZHZXRTZXJ2ZXJMaXN0PSZkZWZ1YWx0U2VydmVySUQ9JmRldmljZV9pZD0maXNwPU1UTiZ2ZXJzaW9uPTU1NSZpc1BhcnRuZXJzaGlwPUZBTFNF"
-        ));
+        );
 
         public override bool HasProtocol(ServerProtocol protocol)
             => protocol == ServerProtocol.V2Ray;

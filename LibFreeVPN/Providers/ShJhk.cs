@@ -31,7 +31,7 @@ namespace LibFreeVPN.Providers.ShJhk
         where TParser : ParserBase<TParser>, new()
     {
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("dXBkYXRlcw=="));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("dXBkYXRlcw==");
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.OpenVPN;
@@ -40,7 +40,7 @@ namespace LibFreeVPN.Providers.ShJhk
     public sealed class ShJk : ShJhkBase<Parser4669>
     {
         
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("SkhLVlBOL0pL"));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("SkhLVlBOL0pL");
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5mYXN0dnBuLmpr";
 
@@ -49,7 +49,7 @@ namespace LibFreeVPN.Providers.ShJhk
 
     public sealed class ShJkV : ShJhkBase<Parser4669>
     {
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("SkhLVlBOL0pWUE5WSVA="));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("SkhLVlBOL0pWUE5WSVA=");
 
         public override string SampleSource => "aHR0cHM6Ly9naXRodWIuY29tL1RIQU5EQVJMSU4yMDE1L1Rlc3QvcmVsZWFzZXMvZG93bmxvYWQvdjIuMC4wL0pLLlZJUC5WUE5fMi4wLjAuYXBr";
 
@@ -58,7 +58,7 @@ namespace LibFreeVPN.Providers.ShJhk
 
     public sealed class ShMmt : ShJhkBase<Parser4669>
     {
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("SkhLVlBOL01NVFZQTg=="));
+        protected override string RepoName =>   Encoding.ASCII.FromBase64String("SkhLVlBOL01NVFZQTg==");
 
         // No sample found - saw in repo list and observed to use the same memecrypto as the others here
         public override string SampleSource => "aHR0cHM6Ly9naXRodWIuY29tL0pIS1ZQTi9NTVRWUE4=";
@@ -68,7 +68,7 @@ namespace LibFreeVPN.Providers.ShJhk
 
     public sealed class ShKo : ShJhkBase<Parser4669>
     {
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("SkhLVlBOL0tPS08="));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("SkhLVlBOL0tPS08=");
 
         // No sample found - saw in repo list and observed to use the same memecrypto as the others here
         public override string SampleSource => "aHR0cHM6Ly9naXRodWIuY29tL0pIS1ZQTi9LT0tP";

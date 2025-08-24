@@ -268,7 +268,7 @@ namespace LibFreeVPN.Providers.ShMpn
     public abstract class ShMpnBase<TParser> : VPNProviderGithubRepoFileBase<TParser>
         where TParser : ParserBase<TParser>, new()
     {
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("TWluYURpTmFiaWwvdXBkYXRlLmxpbms="));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("TWluYURpTmFiaWwvdXBkYXRlLmxpbms=");
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.V2Ray;
@@ -322,7 +322,7 @@ namespace LibFreeVPN.Providers.ShMpn
     {
         public sealed class Parser : ParserBaseXtea<Parser>
         {
-            protected override string OuterKeyId => Encoding.ASCII.GetString(Convert.FromBase64String("MTk4Nj9AUkNBMTk4Nj9AUkNB"));
+            protected override string OuterKeyId => Encoding.ASCII.FromBase64String("MTk4Nj9AUkNBMTk4Nj9AUkNB");
             protected override int PbkdfRounds => 5000;
             protected override uint[] InnerKey => new uint[] { 0xA56BABCD, 0, 0, 0 };
         }
@@ -331,9 +331,9 @@ namespace LibFreeVPN.Providers.ShMpn
 
         public override string SampleVersion => "38.4";
 
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("YWJkb2VsMTAzL3pvbmV0dW5uZWw="));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("YWJkb2VsMTAzL3pvbmV0dW5uZWw=");
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("YmlnanNvbg=="));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("YmlnanNvbg==");
     }
 
     public sealed class ShMpnMp : ShMpnRotBase<ParserRot>
@@ -342,7 +342,7 @@ namespace LibFreeVPN.Providers.ShMpn
 
         public override string SampleVersion => "58.0";
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("bWluYXByb25ldF91cGRhdGVy"));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("bWluYXByb25ldF91cGRhdGVy");
     }
     public sealed class ShMpnOc : ShMpnRotBase<ParserRot>
     {
@@ -350,7 +350,7 @@ namespace LibFreeVPN.Providers.ShMpn
 
         public override string SampleVersion => "7.0";
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("b3BlbmN1c3RvbV91cGRhdGVy"));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("b3BlbmN1c3RvbV91cGRhdGVy");
     }
     public sealed class ShMpnSd : ShMpnRotBase<ParserRot>
     {
@@ -358,6 +358,6 @@ namespace LibFreeVPN.Providers.ShMpn
 
         public override string SampleVersion => "2.0";
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("c2xvd2Ruc191cGRhdGVy"));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("c2xvd2Ruc191cGRhdGVy");
     }
 }

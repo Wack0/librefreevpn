@@ -139,16 +139,43 @@ namespace LibFreeVPN
 
     internal static class LazySingleton<T>
     {
-        private static ConcurrentDictionary<Func<T>, T> s_Objects = new ConcurrentDictionary<Func<T>, T>();
+        private static class KeyedObjects<TValue>
+        {
+            internal static ConcurrentDictionary<(TValue, Func<TValue, T>), T> s_Objects = new ConcurrentDictionary<(TValue, Func<TValue, T>), T>();
+        }
 
+        internal static ConcurrentDictionary<Func<T>, T> s_NonKeyedObjects = new ConcurrentDictionary<Func<T>, T>();
+
+        private static T Intern(T v)
+        {
+            if (typeof(T) == typeof(string)) v = (T)(object)string.Intern((string)(object)v);
+            return v;
+        }
+
+        private static T GetImpl(Func<T> key) => Intern(key());
+
+        private static T GetImpl<TData>((TData, Func<TData, T>) key) => Intern(key.Item2(key.Item1));
+
+        /// <summary>
+        /// Gets a lazy singleton using the provided delegate, calling it to initialise if required. 
+        /// </summary>
+        /// <remarks>Should only be used when the delegate will only be called from one place, otherwise conflicts will occur.</remarks>
+        /// <param name="func">Delegate that initialises and returns a value.</param>
+        /// <returns>The initialised value.</returns>
         internal static T Get(Func<T> func)
         {
-            return s_Objects.GetOrAdd(func, (key) =>
-            {
-                var v = key();
-                if (typeof(T) == typeof(string)) v = (T)(object)string.Intern((string)(object)v);
-                return v;
-            });
+            return s_NonKeyedObjects.GetOrAdd(func, GetImpl);
+        }
+
+        /// <summary>
+        /// Gets a lazy singleton using the provided delegate and data argument, calling it to initialise if required.
+        /// </summary>
+        /// <param name="func">Delegate that takes a single parameter to initialise and returns a value.</param>
+        /// <param name="data">The parameter of the delegate, used to initialise the value.</param>
+        /// <returns>The initialised value.</returns>
+        internal static T Get<TData>(Func<TData, T> func, TData data)
+        {
+            return KeyedObjects<TData>.s_Objects.GetOrAdd((data, func), GetImpl);
         }
     }
 
@@ -156,8 +183,8 @@ namespace LibFreeVPN
     {
         internal static T SingleInstance<T>(this Func<T> func) => LazySingleton<T>.Get(func);
 
-        internal static byte[] FromBase64String(this string base64String) => LazySingleton<byte[]>.Get(() => Convert.FromBase64String(base64String));
+        internal static byte[] FromBase64String(this string base64String) => LazySingleton<byte[]>.Get(Convert.FromBase64String, base64String);
 
-        internal static string FromBase64String(this Encoding encoding, string base64string) => LazySingleton<string>.Get(() => encoding.GetString(Convert.FromBase64String(base64string)));
+        internal static string FromBase64String(this Encoding encoding, string base64string) => LazySingleton<string>.Get((data) => encoding.GetString(Convert.FromBase64String(data)), base64string);
     }
 }

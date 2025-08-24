@@ -161,14 +161,14 @@ namespace LibFreeVPN.Providers.OvpnZip
         public override string SampleVersion => "28";
 
         protected override string RequestUri =>
-            Encoding.ASCII.GetString(Convert.FromBase64String("aHR0cDovL3dpbjk5LnNtdGhhaTRnLndpbi9wbGFkdWtfd3MvZmlsZS8="));
+            Encoding.ASCII.FromBase64String("aHR0cDovL3dpbjk5LnNtdGhhaTRnLndpbi9wbGFkdWtfd3MvZmlsZS8=");
 
-        protected override byte[] MainKey => Convert.FromBase64String("UGxhZHVrVlBOX0tleTAyNA==");
+        protected override byte[] MainKey => ("UGxhZHVrVlBOX0tleTAyNA==").FromBase64String();
 
-        protected override byte[] MainIv => Convert.FromBase64String("UGxhZHVrVlBOX1ZlYzAyNA==");
+        protected override byte[] MainIv => ("UGxhZHVrVlBOX1ZlYzAyNA==").FromBase64String();
 
-        protected override byte[] ZipKey => Convert.FromBase64String("UGxhZHVrWmlwS2V5MjAyNA==");
+        protected override byte[] ZipKey => ("UGxhZHVrWmlwS2V5MjAyNA==").FromBase64String();
 
-        protected override byte[] ZipIv => Convert.FromBase64String("UGxhZHVrWmlwVmVjMjAyNA==");
+        protected override byte[] ZipIv => ("UGxhZHVrWmlwVmVjMjAyNA==").FromBase64String();
     }
 }

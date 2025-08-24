@@ -20,7 +20,7 @@ namespace LibFreeVPN.Providers
         {
             protected override string OvpnKey => "setOpenVPN";
 
-            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("YU5MY0cyRlQ2OXZBQk5CcQ=="));
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("YU5MY0cyRlQ2OXZBQk5CcQ==");
         }
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5taXNha2kuZXNhbnZwbg==";
@@ -30,6 +30,6 @@ namespace LibFreeVPN.Providers
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.OpenVPN;
 
-        protected override string RequestUri => Encoding.ASCII.GetString(Convert.FromBase64String("aHR0cHM6Ly9lLXNhbi12cG4uaW4ubmV0L1VwZGF0ZS9lLXNhbi12cG4uanNvbg=="));
+        protected override string RequestUri => Encoding.ASCII.FromBase64String("aHR0cHM6Ly9lLXNhbi12cG4uaW4ubmV0L1VwZGF0ZS9lLXNhbi12cG4uanNvbg==");
     }
 }

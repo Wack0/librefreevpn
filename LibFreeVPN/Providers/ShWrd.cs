@@ -20,56 +20,56 @@ namespace LibFreeVPN.Providers.ShWrd
         where TParser : SocksHttpParser<TParser>, new()
     {
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("RmlsZS5qc29u"));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("RmlsZS5qc29u");
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.OpenVPN || protocol == ServerProtocol.V2Ray;
 
 
 
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("aHVubWFpL3dhcnJpbmdkYQ=="));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("aHVubWFpL3dhcnJpbmdkYQ==");
     }
 
     public sealed class ShWrdPk : ShWrdBase<ShWrdPk.Parser>
     {
         public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
-            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("cHVrYW5ndnBuMjcwQA=="));
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("cHVrYW5ndnBuMjcwQA=="    );
         }
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5wdWthbmd2cG4udGg=";
 
         public override string SampleVersion => "7.4";
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("cHVrYW5ndnBuL3VwLWZpbGUuanNvbg=="));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("cHVrYW5ndnBuL3VwLWZpbGUuanNvbg==");
     }
 
     public sealed class ShWrdKh : ShWrdBase<ShWrdKh.Parser>
     {
         public sealed class Parser : SocksHttpParserTeaAes<Parser>
         {
-            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("a2hhbXZwbjI3MEA="));
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("a2hhbXZwbjI3MEA=");
         }
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5oa2FtdnBuLm5ldA==";
 
         public override string SampleVersion => "14.0";
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("a2hhbXZwbi91cGRhdGUtZmlsZS5qc29u"));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("a2hhbXZwbi91cGRhdGUtZmlsZS5qc29u");
     }
 
     public sealed class ShWrdMt : ShWrdBase<ShWrdMt.Parser>
     {
         public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
         {
-            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("bXR2cG4yNUA="));
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("bXR2cG4yNUA=");
         }
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5tdHZwbi5tdHZwbg==";
 
         public override string SampleVersion => "2.2";
 
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("aHVubWFpL01ULVZQTg=="));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("aHVubWFpL01ULVZQTg==");
     }
 
     public sealed class ShWrdErr : ShWrdBase<ShWrdErr.Parser>
@@ -88,9 +88,9 @@ namespace LibFreeVPN.Providers.ShWrd
 
         public override string SampleVersion => "2.2";
 
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("RVJST1ItVlBOL2Vycm9yLXZwbi5naXRodWIuaW8="));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("RVJST1ItVlBOL2Vycm9yLXZwbi5naXRodWIuaW8=");
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("Y29uZmlnLmpzb24="));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("Y29uZmlnLmpzb24=");
     }
 
     public sealed class ShWrdPnt : ShWrdBase<ShWrdPnt.Parser>
@@ -99,7 +99,7 @@ namespace LibFreeVPN.Providers.ShWrd
         {
             protected override string ServerTypeKey => "Category";
             protected override uint TeaDeltaOuter => 0xD1FBFA0B;
-            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("Y29tLnBudHZwbi5uZXQubQ=="));
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("Y29tLnBudHZwbi5uZXQubQ==");
             protected override int InnerKey => 7376;
             protected override bool OvpnPortIsBogus => true;
 
@@ -116,9 +116,9 @@ namespace LibFreeVPN.Providers.ShWrd
 
         public override string SampleVersion => "1.0.5";
 
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("c2Fuc29lMjAyMi9QTlRfVlBO"));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("c2Fuc29lMjAyMi9QTlRfVlBO");
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("Y29uZmlnLmZpbGU="));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("Y29uZmlnLmZpbGU=");
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.OpenVPN;
@@ -134,7 +134,7 @@ namespace LibFreeVPN.Providers.ShWrd
 
             protected override string ServerTypeKey => "tunnelT";
 
-            protected override string OuterKey => Encoding.ASCII.GetString(Convert.FromBase64String("MTAyMzI1MzU="));
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("MTAyMzI1MzU=");
 
             protected override uint TeaDelta => 0xD1FBFA0B;
 
@@ -146,9 +146,9 @@ namespace LibFreeVPN.Providers.ShWrd
 
         public override string SampleVersion => "10.10";
 
-        protected override string RepoName => Encoding.ASCII.GetString(Convert.FromBase64String("RWtyb21TU0gvTnVydWxmYWhtaQ=="));
+        protected override string RepoName => Encoding.ASCII.FromBase64String("RWtyb21TU0gvTnVydWxmYWhtaQ==");
 
-        protected override string ConfigName => Encoding.ASCII.GetString(Convert.FromBase64String("ZmlsZWlkYXZwbi5qc29u"));
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("ZmlsZWlkYXZwbi5qc29u");
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH;
