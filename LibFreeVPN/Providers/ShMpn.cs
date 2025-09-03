@@ -104,6 +104,8 @@ namespace LibFreeVPN.Providers.ShMpn
     {
         protected abstract uint[] InnerKey { get; }
 
+        protected virtual bool HasReverseRot => true;
+
         private static void XteaDecryptBlock(uint num_rounds, uint[] v, uint[] key)
         {
             uint i;
@@ -172,6 +174,7 @@ namespace LibFreeVPN.Providers.ShMpn
             ciphertext = DecryptInner(ciphertext);
 
             if (jsonKey != SSHPrivkeyKey) return ciphertext;
+            if (!HasReverseRot) return ciphertext;
 
             var start = ciphertext.IndexOf("KEY-----");
             if (start == -1) return ciphertext;
@@ -322,6 +325,7 @@ namespace LibFreeVPN.Providers.ShMpn
     {
         public sealed class Parser : ParserBaseXtea<Parser>
         {
+            protected override bool HasReverseRot => false;
             protected override string OuterKeyId => Encoding.ASCII.FromBase64String("MTk4Nj9AUkNBMTk4Nj9AUkNB");
             protected override int PbkdfRounds => 5000;
             protected override uint[] InnerKey => new uint[] { 0xA56BABCD, 0, 0, 0 };
