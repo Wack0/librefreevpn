@@ -1,5 +1,6 @@
 ﻿using LibFreeVPN.Memecrypto;
 using LibFreeVPN.ProviderHelpers;
+using LibFreeVPN.Providers.ShWrd;
 using LibFreeVPN.Servers;
 using System;
 using System.Collections.Generic;
@@ -268,8 +269,18 @@ namespace LibFreeVPN.Providers.ShMpn
 
     public sealed class ParserRot : ParserBaseRot<ParserRot> { }
 
+    public abstract class ParserXxteaBase<TType> : SocksHttpWithOvpnNumericParserTeaOuter<TType>
+        where TType : ParserXxteaBase<TType>, new()
+    {
+        protected override int InnerKey => 4669;
+        protected override string OvpnKey => "Ovpn_Cert";
+        protected override string V2RayKey => "ServerCloudFront";
+    }
+
+    public sealed class ParserXxtea : ParserXxteaBase<ParserXxtea> { }
+
     public abstract class ShMpnBase<TParser> : VPNProviderGithubRepoFileBase<TParser>
-        where TParser : ParserBase<TParser>, new()
+        where TParser : SocksHttpParser<TParser>, new()
     {
         protected override string RepoName => Encoding.ASCII.FromBase64String("TWluYURpTmFiaWwvdXBkYXRlLmxpbms=");
 
@@ -321,19 +332,34 @@ namespace LibFreeVPN.Providers.ShMpn
 
 
 
-    public sealed class ShMpnBee : ShMpnBase<ShMpnBee.Parser>
+    public sealed class ShMpnBee : ShMpnBase<ParserXxtea>
     {
-        public sealed class Parser : ParserBaseXtea<Parser>
-        {
-            protected override bool HasReverseRot => false;
-            protected override string OuterKeyId => Encoding.ASCII.FromBase64String("MTk4Nj9AUkNBMTk4Nj9AUkNB");
-            protected override int PbkdfRounds => 5000;
-            protected override uint[] InnerKey => new uint[] { 0xA56BABCD, 0, 0, 0 };
-        }
-
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWRldi5kZXY3LmJlZQ==";
 
         public override string SampleVersion => "38.4";
+
+        protected override string RepoName => Encoding.ASCII.FromBase64String("YWJkb2VsMTAzL3pvbmV0dW5uZWw=");
+
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("YmlnanNvbg==");
+    }
+
+    public sealed class ShMpnBee2 : ShMpnBase<ParserXxtea>
+    {
+        public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWRldi5kZXY3LmJlZQ==";
+
+        public override string SampleVersion => "83.0";
+
+        protected override string RepoName => Encoding.ASCII.FromBase64String("YWJkb2VsMTAzL3pvbmV0dW5uZWw=");
+
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("emNiYw==");
+    }
+
+    public sealed class ShMpnBee3 : ShMpnBase<ParserXxtea>
+    {
+
+        public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWRldi5kZXY3LmJlZQ==";
+
+        public override string SampleVersion => "83.0";
 
         protected override string RepoName => Encoding.ASCII.FromBase64String("YWJkb2VsMTAzL3pvbmV0dW5uZWw=");
 

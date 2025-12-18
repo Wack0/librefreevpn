@@ -154,55 +154,59 @@ namespace LibFreeVPN.Servers
                     throw new InvalidDataException();
             }
 
-            string hostname, port;
+            string  port;
             string username = null, password = null, v2ray = null, ovpnconf = null;
             string name, country;
 
             if (!server.TryGetPropertyString(ServerNameKey, out name)) throw new InvalidDataException();
             if (!server.TryGetPropertyString(CountryNameKey, out country)) throw new InvalidDataException();
-            if (!server.TryGetPropertyString(HostnameKey, out hostname)) throw new InvalidDataException();
+            if (!server.TryGetPropertyString(HostnameKey, out var hostnames)) throw new InvalidDataException();
             if (!server.TryGetPropertyString(OvpnPortKey, out port)) throw new InvalidDataException();
 
-            var extraRegistry = new Dictionary<string, string>();
-            foreach (var kv in passedExtraRegistry) extraRegistry.Add(kv.Key, kv.Value);
-            extraRegistry.Add(ServerRegistryKeys.DisplayName, name);
-            extraRegistry.Add(ServerRegistryKeys.Country, country);
-
-            switch (serverType.ToLower())
+            // if hostname contains semicolon then it's a list of hostnames
+            return hostnames.Split(';').SelectMany((hostname) =>
             {
-                case "0": // ovpn
-                    if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
-                    if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
-                    if (!server.TryGetPropertyString(OvpnKey, out ovpnconf))
-                    {
-                        if (root.RootElement.TryGetPropertyString(OvpnKey, out ovpnconf)) ovpnconf = DecryptInner(OvpnKey, ovpnconf);
-                        else ovpnconf = null;
-                    }
-                    if (string.IsNullOrEmpty(ovpnconf)) throw new InvalidDataException();
-                    if (OvpnPortIsBogus)
-                    {
-                        // Port in the JSON object is bogus, the real port is in the openvpn config
-                        var real = OpenVpnServer.ParseConfigFull(ovpnconf).FirstOrDefault();
-                        if (real == null || !real.Registry.TryGetValue(ServerRegistryKeys.Port, out port)) throw new InvalidDataException();
+                var extraRegistry = new Dictionary<string, string>();
+                foreach (var kv in passedExtraRegistry) extraRegistry.Add(kv.Key, kv.Value);
+                extraRegistry.Add(ServerRegistryKeys.DisplayName, name);
+                extraRegistry.Add(ServerRegistryKeys.Country, country);
 
-                    }
-                    var ovpnRegistry = new Dictionary<string, string>();
-                    foreach (var kv in extraRegistry) ovpnRegistry.Add(kv.Key, kv.Value);
-                    ovpnRegistry.Add(ServerRegistryKeys.Username, username);
-                    ovpnRegistry.Add(ServerRegistryKeys.Password, password);
-                    return OpenVpnServer.ParseConfigFull(OpenVpnServer.InjectHostIntoConfig(ovpnconf, hostname, port), ovpnRegistry);
-                case "1": // ssh
-                    if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
-                    if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
-                    return new SSHServer(hostname, port, username, password, extraRegistry).EnumerableSingle<IVPNServer>();
-                // 2 => dns
-                case "3": // v2ray
-                    if (!server.TryGetPropertyString(V2RayKey, out v2ray)) throw new InvalidDataException();
-                    return V2RayServer.ParseConfigFull(v2ray, extraRegistry);
-                // 4 => udp
-                default:
-                    throw new InvalidDataException();
-            }
+                switch (serverType.ToLower())
+                {
+                    case "0": // ovpn
+                        if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
+                        if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
+                        if (!server.TryGetPropertyString(OvpnKey, out ovpnconf))
+                        {
+                            if (root.RootElement.TryGetPropertyString(OvpnKey, out ovpnconf)) ovpnconf = DecryptInner(OvpnKey, ovpnconf);
+                            else ovpnconf = null;
+                        }
+                        if (string.IsNullOrEmpty(ovpnconf)) throw new InvalidDataException();
+                        if (OvpnPortIsBogus)
+                        {
+                            // Port in the JSON object is bogus, the real port is in the openvpn config
+                            var real = OpenVpnServer.ParseConfigFull(ovpnconf).FirstOrDefault();
+                            if (real == null || !real.Registry.TryGetValue(ServerRegistryKeys.Port, out port)) throw new InvalidDataException();
+
+                        }
+                        var ovpnRegistry = new Dictionary<string, string>();
+                        foreach (var kv in extraRegistry) ovpnRegistry.Add(kv.Key, kv.Value);
+                        ovpnRegistry.Add(ServerRegistryKeys.Username, username);
+                        ovpnRegistry.Add(ServerRegistryKeys.Password, password);
+                        return OpenVpnServer.ParseConfigFull(OpenVpnServer.InjectHostIntoConfig(ovpnconf, hostname, port), ovpnRegistry);
+                    case "1": // ssh
+                        if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
+                        if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
+                        return new SSHServer(hostname, port, username, password, extraRegistry).EnumerableSingle<IVPNServer>();
+                    // 2 => dns
+                    case "3": // v2ray
+                        if (!server.TryGetPropertyString(V2RayKey, out v2ray)) throw new InvalidDataException();
+                        return V2RayServer.ParseConfigFull(v2ray, extraRegistry);
+                    // 4 => udp
+                    default:
+                        throw new InvalidDataException();
+                }
+            }).ToArray();
         }
     }
 
@@ -257,6 +261,15 @@ namespace LibFreeVPN.Servers
             if (jsonKey == OvpnPortKey) return ciphertext.Split(':')[0];
             if (jsonKey != HostnameKey && jsonKey != UsernameKey && jsonKey != PasswordKey && jsonKey != OvpnKey && jsonKey != V2RayKey) return ciphertext;
 
+            return DecryptInner(ciphertext);
+        }
+    }
+
+    public abstract class SocksHttpWithOvpnNumericParserTeaOuter<TType> : SocksHttpWithOvpnNumericParserTea<TType>
+        where TType : SocksHttpWithOvpnNumericParserTeaOuter<TType>, new()
+    {
+        protected override string DecryptOuter(string ciphertext)
+        {
             return DecryptInner(ciphertext);
         }
     }
