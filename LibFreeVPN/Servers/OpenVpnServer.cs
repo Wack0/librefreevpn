@@ -76,29 +76,133 @@ namespace LibFreeVPN.Servers
                 var servers = new List<string>();
                 var serverIdx = -1;
                 string port = null;
+                bool isAllSameHost = true;
+                string lastHost = null;
 
-                for (int i = 0; i < split.Length; i++)
+                var hasProfiles = split.Where((s) => s.ToLower() == "<connection>").Any();
+                if (hasProfiles)
                 {
-                    var tokenIdx = split[i].IndexOf(' ');
-                    if (tokenIdx != -1 && split[i].Substring(0, tokenIdx).ToLower() == "remote")
+                    StringBuilder sb = null;
+
+                    for (int i = 0; i < split.Length; i++)
                     {
-                        if (serverIdx == -1) serverIdx = i;
-                        servers.Add(split[i]);
-                    }
-                    else
-                    {
-                        if (port == null && tokenIdx != -1 && split[i].Substring(0, tokenIdx).ToLower() == "port")
+                        if (split[i].ToLower() == "<connection>")
                         {
-                            var portCommentIdx = split[i].IndexOf('#');
-                            var cleanPort = split[i];
-                            if (portCommentIdx != -1) cleanPort = split[i].Substring(0, portCommentIdx);
-                            port = cleanPort.Split(' ')[1];
+                            if (sb == null) sb = new StringBuilder();
+                            if (serverIdx == -1) serverIdx = i;
                         }
-                        configClean.Add(split[i]);
+                        bool useClean = (sb == null);
+                        var tokenIdx = split[i].IndexOf(' ');
+                        if (tokenIdx != -1 && split[i].Substring(0, tokenIdx).ToLower() == "remote")
+                        {
+                            if (useClean) configClean.Add(split[i]);
+                            else sb.AppendLine(split[i]);
+                            if (isAllSameHost)
+                            {
+                                var splitServer = split[i].Split(' ');
+                                if (lastHost == null) lastHost = splitServer[1];
+                                else isAllSameHost = lastHost == splitServer[1];
+                            }
+                        }
+                        else
+                        {
+                            if (port == null && tokenIdx != -1 && split[i].Substring(0, tokenIdx).ToLower() == "port")
+                            {
+                                var portCommentIdx = split[i].IndexOf('#');
+                                var cleanPort = split[i];
+                                if (portCommentIdx != -1) cleanPort = split[i].Substring(0, portCommentIdx);
+                                port = cleanPort.Split(' ')[1];
+                            }
+                            if (useClean) configClean.Add(split[i]);
+                            else sb.AppendLine(split[i]);
+                        }
+                        if (split[i].ToLower() == "</connection>")
+                        {
+                            if (sb != null) servers.Add(sb.ToString());
+                            sb = null;
+                        }
+                    }
+                } else
+                {
+                    for (int i = 0; i < split.Length; i++)
+                    {
+                        var tokenIdx = split[i].IndexOf(' ');
+                        if (tokenIdx != -1 && split[i].Substring(0, tokenIdx).ToLower() == "remote")
+                        {
+                            if (serverIdx == -1) serverIdx = i;
+                            servers.Add(split[i]);
+                            if (isAllSameHost)
+                            {
+                                var splitServer = split[i].Split(' ');
+                                if (lastHost == null) lastHost = splitServer[1];
+                                else isAllSameHost = lastHost == splitServer[1];
+                            }
+                        }
+                        else
+                        {
+                            if (port == null && tokenIdx != -1 && split[i].Substring(0, tokenIdx).ToLower() == "port")
+                            {
+                                var portCommentIdx = split[i].IndexOf('#');
+                                var cleanPort = split[i];
+                                if (portCommentIdx != -1) cleanPort = split[i].Substring(0, portCommentIdx);
+                                port = cleanPort.Split(' ')[1];
+                            }
+                            configClean.Add(split[i]);
+                        }
                     }
                 }
 
+                // if all are same host, don't bother splitting
+                if (isAllSameHost)
+                {
+                    var server = servers[0];
+                    var serverCommentIdx = server.IndexOf('#');
+                    var cleanServer = server;
+                    if (serverCommentIdx != -1) cleanServer = server.Substring(0, serverCommentIdx);
+                    var splitServer = cleanServer.Split(' ');
+                    var thisPort = string.Empty;
+                    if (splitServer.Length < 2) return Enumerable.Empty<(string, string, string)>();
+                    else if (splitServer.Length == 2)
+                    {
+                        if (port == null) return Enumerable.Empty<(string, string, string)>();
+                        thisPort = port;
+                    }
+                    else
+                    {
+                        thisPort = splitServer[2];
+                    }
+                    return (config, splitServer[1], thisPort).EnumerableSingle().ToList();
+                }
+
                 // for each server, take a copy of the configClean, add the server in, yield return it
+                if (hasProfiles)
+                {
+                    return servers.SelectMany((server) =>
+                    {
+                        var thisConfig = new List<string>(configClean);
+                        thisConfig.Insert(serverIdx, server);
+
+                        var remote = server.Split(ServerUtilities.NewLines, StringSplitOptions.None).First((s) => s.StartsWith("remote "));
+
+                        var serverCommentIdx = remote.IndexOf('#');
+                        var cleanServer = remote;
+                        if (serverCommentIdx != -1) cleanServer = remote.Substring(0, serverCommentIdx);
+                        var splitServer = cleanServer.Split(' ');
+                        var thisPort = string.Empty;
+                        if (splitServer.Length < 2) return Enumerable.Empty<(string, string, string)>();
+                        else if (splitServer.Length == 2)
+                        {
+                            if (port == null) return Enumerable.Empty<(string, string, string)>();
+                            thisPort = port;
+                        }
+                        else
+                        {
+                            thisPort = splitServer[2];
+                        }
+
+                        return (string.Join("\r\n", thisConfig.ToArray()), splitServer[1], thisPort).EnumerableSingle();
+                    }).ToList();
+                }
                 return servers.SelectMany((server) =>
                 {
                     var thisConfig = new List<string>(configClean);
