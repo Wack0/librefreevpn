@@ -42,10 +42,13 @@ namespace LibFreeVPN.Servers
             private static IniDataParser s_IniParser = new IniDataParser();
 
             private static char[] s_SplitKv = { '=' };
+            static Parser()
+            {
+                s_IniParser.Configuration.SkipInvalidLines = true;
+            }
 
             public override IEnumerable<(string config, string hostname, string port)> ParseConfigFull(string config)
             {
-                s_IniParser.Configuration.SkipInvalidLines = true;
                 var iniData = s_IniParser.Parse(config);
 
                 var splitData = iniData["Proxy"]
