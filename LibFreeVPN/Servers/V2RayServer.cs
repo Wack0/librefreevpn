@@ -68,6 +68,16 @@ namespace LibFreeVPN.Servers
 
                     return (config.Trim(), host, parsed.Port.ToString()).EnumerableSingle();
                 }
+
+                if (config.StartsWith("ss://"))
+                {
+                    var parsed = new Uri(config.Trim());
+
+                    var host = parsed.Host;
+                    return (config.Trim(), host, parsed.Port.ToString()).EnumerableSingle();
+                }
+
+                
                 var json = JsonDocument.Parse(config);
                 if (json.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
                 if (!json.RootElement.TryGetProperty("outbounds", out var serversElem)) throw new InvalidDataException();
@@ -383,8 +393,33 @@ namespace LibFreeVPN.Servers
 
                     return (ub.Uri.ToString(), host, ub.Port.ToString());
                 });
+                // BUGBUG: shadowsocks json parsing currently untested.
+                var ssData = outbounds.Where((elem) => elem.protocol == "shadowsocks").SelectMany((elem) =>
+                {
+                    // Convert one outbound with several servers to several outbounds with one server each.
+                    var servers = elem.settings.servers;
 
-                return vlessData.Concat(vmessData).Concat(vlessSboxData);
+                    var list = new List<Outbounds4Ray>();
+                    foreach (var server in servers)
+                    {
+                        elem.settings.servers = new List<ServersItem4Ray>() { server };
+                        list.Add(elem);
+                    }
+
+                    return list;
+                }).Select((elem) =>
+                {
+                    var server = elem.settings.servers[0];
+                    var ub = new UriBuilder();
+                    ub.Scheme = "ss";
+                    ub.UserName = Convert.ToBase64String(Encoding.UTF8.GetBytes(server.method + ":" + server.password));
+                    ub.Host = server.address;
+                    ub.Port = server.port;
+
+                    return (ub.Uri.ToString(), ub.Host, ub.Port.ToString());
+                });
+
+                return vlessData.Concat(vmessData).Concat(vlessSboxData).Concat(ssData);
             }
 
             public override void AddExtraProperties(IDictionary<string, string> registry, string config)
@@ -399,7 +434,7 @@ namespace LibFreeVPN.Servers
                     return;
                 }
 
-                if (config.StartsWith("vless://"))
+                if (config.StartsWith("vless://") || config.StartsWith("ss://"))
                 {
                     if (!registry.ContainsKey(ServerRegistryKeys.DisplayName))
                     {
