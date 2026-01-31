@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibFreeVPN", "LibFreeVPN\Li
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeVPNC", "FreeVPNC\FreeVPNC.csproj", "{CE097991-0F74-48F0-AD5A-C2ABC050E58E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeVPNPC", "FreeVPNPC\FreeVPNPC.csproj", "{7926B9A5-DBC0-499C-A350-DA22F8B9DA71}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{CE097991-0F74-48F0-AD5A-C2ABC050E58E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE097991-0F74-48F0-AD5A-C2ABC050E58E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE097991-0F74-48F0-AD5A-C2ABC050E58E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7926B9A5-DBC0-499C-A350-DA22F8B9DA71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7926B9A5-DBC0-499C-A350-DA22F8B9DA71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7926B9A5-DBC0-499C-A350-DA22F8B9DA71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7926B9A5-DBC0-499C-A350-DA22F8B9DA71}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

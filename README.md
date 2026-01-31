@@ -6,7 +6,9 @@ Use those VPNs on any device which has a client for those protocols.
 
 Any custom code for DPI/etc workarounds implemented in these clients (ie, websocket + domain fronting CDNs, for example) is not implemented here.
 
-Library targets .NET Standard 2.0, command line application targets .NET Core 3.1, .NET 6, .NET 8 and .NET Framework 4.7.2.
+Library targets .NET Standard 2.0, command line application targets .NET Core 3.1, .NET 6, .NET 8 and .NET Framework 4.7.2, winforms application targets .NET 6, .NET 8 and .NET Framework 4.7.2.
+
+(All builds for .NET Framework 4.7.2 should also run on mono.)
 
 ## Why?
 
@@ -43,6 +45,14 @@ Get all configs except OpenVPN, without risky requests: `freevpnc getall -e open
 List all providers that provide OpenVPN servers or SSH tunnels, including those that would make risky requests: `freevpnc list -i openvpn ssh -r`
 
 Get all configs from provider `BeautyBird`: `freevpnc get BeautyBird`
+
+## User interface documentation
+
+- Choose wanted protocols from left box
+- Optionally, enable risky requests
+- Choose wanted providers from right box
+- Click Get button
+- Choose the corresponding server, and copy the config to clipboard or save to file.
 
 ## License
 
