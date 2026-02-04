@@ -8,7 +8,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibFreeVPN.Providers
+namespace LibFreeVPN.Providers.SocksHttp
 {
     // Android app. SocksHttp using SSH + v2ray.
 

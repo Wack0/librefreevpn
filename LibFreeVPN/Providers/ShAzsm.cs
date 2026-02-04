@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibFreeVPN.Providers
+namespace LibFreeVPN.Providers.SocksHttp
 {
     // Android app, distributed outside of Play Store. SocksHttp fork. SSH + v2ray (v2ray can domain front through zoom)
     public sealed class ShAzsm : VPNProviderGithubRepoFileBase<ShAzsm.Parser>

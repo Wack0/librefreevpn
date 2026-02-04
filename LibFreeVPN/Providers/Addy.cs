@@ -1,6 +1,5 @@
 ﻿using LibFreeVPN.Memecrypto;
 using LibFreeVPN.ProviderHelpers;
-using LibFreeVPN.Providers.ShV2x;
 using LibFreeVPN.Servers;
 using LibFreeVPN.Servers.V2Ray;
 using System;

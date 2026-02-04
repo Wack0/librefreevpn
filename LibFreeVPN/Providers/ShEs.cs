@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace LibFreeVPN.Providers
+namespace LibFreeVPN.Providers.SocksHttp
 {
     // Android app. SocksHttp using SSH + OpenVPN.
 

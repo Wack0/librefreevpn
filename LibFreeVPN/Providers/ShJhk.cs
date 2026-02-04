@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 // Android apps. SocksHttp using SSH + OpenVPN.
 // All of these by same developer, same github account used, xxtea + custom unicode rot.
-namespace LibFreeVPN.Providers.ShJhk
+namespace LibFreeVPN.Providers.SocksHttp.ShJhk
 {
     public abstract class ParserBase<TType> : SocksHttpWithOvpnNumericParserTea<TType>
         where TType : ParserBase<TType>, new()

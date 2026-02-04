@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 // Android apps, sockshttp fork with v2ray only.
 // Risky requests made - C2 attempts to track users for being able to only send "premium" servers to paid users.
-namespace LibFreeVPN.Providers.ShV2x
+namespace LibFreeVPN.Providers.SocksHttp.ShV2x
 {
     public sealed class Parser : SocksHttpParserAesPbkdf2<Parser>
     {

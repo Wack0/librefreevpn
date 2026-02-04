@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 // Android apps. SocksHttp using SSH + OpenVPN + V2Ray.
 // All of these by same developer, same github repo used, same xxtea constant, differs only in xxtea keys.
-namespace LibFreeVPN.Providers.ShNo
+namespace LibFreeVPN.Providers.SocksHttp.ShNo
 {
     public abstract class ShNoBase<TParser> : VPNProviderGithubRepoFileBase<TParser>
         where TParser : SocksHttpWithOvpnParserTea<TParser>, new()

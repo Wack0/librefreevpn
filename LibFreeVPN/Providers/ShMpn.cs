@@ -1,6 +1,5 @@
 ﻿using LibFreeVPN.Memecrypto;
 using LibFreeVPN.ProviderHelpers;
-using LibFreeVPN.Providers.ShWrd;
 using LibFreeVPN.Servers;
 using System;
 using System.Collections.Generic;
@@ -14,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 // Android apps. SocksHttp using SSH + V2ray.
-namespace LibFreeVPN.Providers.ShMpn
+namespace LibFreeVPN.Providers.SocksHttp.ShMpn
 {
     public abstract class ParserBase<TType> : SocksHttpParserAesPbkdf2<TType>
         where TType : ParserBase<TType>, new()

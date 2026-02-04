@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 // Android apps. SocksHttp using SSH + OpenVPN
 // All of these by same developer.
 // Original apps use cname to github pages, this implementation hits the repo directly.
-namespace LibFreeVPN.Providers.ShWrd
+namespace LibFreeVPN.Providers.SocksHttp.ShWrd
 {
     public abstract class ShWrdBase<TParser> : VPNProviderGithubRepoFileBase<TParser>
         where TParser : SocksHttpParser<TParser>, new()
