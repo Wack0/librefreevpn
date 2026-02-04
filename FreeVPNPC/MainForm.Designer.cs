@@ -175,6 +175,7 @@
             this.Controls.Add(this.groupBoxProtocol);
             this.Controls.Add(this.checkBoxRisky);
             this.Controls.Add(this.pictureBoxLogo);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Name = "MainForm";
             this.Text = "FreeVPNPC";
             this.Load += new System.EventHandler(this.MainForm_Load);
