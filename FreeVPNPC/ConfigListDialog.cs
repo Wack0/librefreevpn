@@ -43,7 +43,8 @@ namespace FreeVPNPC
 
         private void listBoxServers_SelectedIndexChanged(object sender, EventArgs e)
         {
-            textBoxConfig.Text = m_Servers[listBoxServers.SelectedIndex].Config;
+            if (listBoxServers.SelectedIndex < 1) textBoxConfig.Text = string.Empty;
+            else textBoxConfig.Text = m_Servers[listBoxServers.SelectedIndex].Config;
         }
 
         private async void buttonSave_Click(object sender, EventArgs e)
