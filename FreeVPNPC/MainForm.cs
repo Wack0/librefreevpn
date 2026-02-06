@@ -88,7 +88,7 @@ namespace FreeVPNPC
                 if (p.RiskyRequests && !checkBoxRisky.Checked) return false;
                 if (allTicked) return true;
                 return protocols.Any((prot) => p.HasProtocol(prot));
-            }).ToList();
+            }).OrderBy((p) => p.Name).ToList();
 
             checkedListBoxProvider.Items.Clear();
             for (int i = 0; i < m_Providers.Count; i++)
