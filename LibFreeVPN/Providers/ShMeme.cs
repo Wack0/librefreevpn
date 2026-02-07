@@ -86,7 +86,7 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMeme
 
             protected override byte[] InnerSalt => s_OuterKeyDerivation; // unused
 
-            protected override string V2rayProtocolType => "4";
+            protected override string ProtocolTypeV2ray => "4";
             protected override uint TeaDelta => 0x9E3779B9;
 
             protected override string OvpnConfTemplate => Encoding.ASCII.FromBase64String(
