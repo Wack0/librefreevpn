@@ -1,4 +1,5 @@
-﻿using LibFreeVPN.Memecrypto;
+﻿using HkdfStandard;
+using LibFreeVPN.Memecrypto;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Web;
 
 namespace LibFreeVPN.Servers
 {
@@ -208,6 +211,485 @@ namespace LibFreeVPN.Servers
                 }
             }).ToArray();
         }
+    }
+
+    public abstract class SocksHttpRenzParser<TType> : SocksHttpWithOvpnNumericParser<TType>
+        where TType : SocksHttpRenzParser<TType>, new()
+    {
+        private sealed class RenzV2rayLinkParser
+        {
+            public string id, add, port, path, host, sni, tls;
+            public string Type0Convert()
+            {
+                var jsonConfig = new JsonObject()
+                {
+                    ["v"] = "2",
+                    ["add"] = add,
+                    ["aid"] = "0",
+                    ["alpn"] = "",
+                    ["fp"] = "",
+                    ["host"] = host,
+                    ["id"] = id,
+                    ["net"] = "ws",
+                    ["path"] = path,
+                    ["port"] = port,
+                    ["ps"] = "Vmess",
+                    ["scy"] = "auto",
+                    ["sni"] =  sni,
+                    ["tls"] = tls,
+                    ["type"] = "",
+                };
+                return string.Format("vmess://{0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonConfig.ToJsonString())));
+            }
+
+            public string Type1Convert()
+            {
+                var jsonConfig = new JsonObject()
+                {
+                    ["v"] = "2",
+                    ["add"] = add,
+                    ["aid"] = "0",
+                    ["alpn"] = "",
+                    ["fp"] = "",
+                    ["host"] = "",
+                    ["id"] = id,
+                    ["net"] = "grpc",
+                    ["path"] = path,
+                    ["port"] = port,
+                    ["ps"] = "Renz-V2Ray",
+                    ["scy"] = "none",
+                    ["sni"] = sni,
+                    ["tls"] = tls,
+                    ["type"] = "gun",
+                };
+                return string.Format("vmess://{0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonConfig.ToJsonString())));
+            }
+
+            public string Type2Convert()
+            {
+                var jsonConfig = new JsonObject()
+                {
+                    ["v"] = "2",
+                    ["add"] = add,
+                    ["aid"] = "0",
+                    ["alpn"] = "",
+                    ["fp"] = "",
+                    ["host"] = "",
+                    ["id"] = id,
+                    ["net"] = "grpc",
+                    ["path"] = path,
+                    ["port"] = port,
+                    ["ps"] = "Renz-V2Ray",
+                    ["scy"] = "none",
+                    ["sni"] = sni,
+                    ["tls"] = tls,
+                    ["type"] = "gun",
+                };
+                return string.Format("vmess://{0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonConfig.ToJsonString())));
+            }
+
+            public string Type3Convert()
+            {
+                return string.Format("vless://{0}@{1}:{2}?path={3}&security={4}&encryption=none&host={5}&type=ws&sni={6}#Renz-V2Ray",
+                    id, add, port, HttpUtility.UrlEncode(path), tls, host, sni);
+            }
+
+            public string Type4Convert()
+            {
+                return string.Format("vless://{0}@{1}:{2}?mode=gun&security={3}&encryption=none&type=grpc&serviceName={4}&sni={5}#Renz-V2Ray",
+                    id, add, port, tls, HttpUtility.UrlEncode(path), sni);
+            }
+
+            public string Type5Convert()
+            {
+                return string.Format("vless://{0}@{1}:{2}?path={3}&encryption=none&type=ws#Renz-V2Ray",
+                    id, add, port, HttpUtility.UrlEncode(path));
+            }
+
+            public string ConvertGeneric(string type)
+            {
+                if (type == "0") return Type0Convert();
+                if (type == "1") return Type1Convert();
+                if (type == "2") return Type2Convert();
+                if (type == "3") return Type3Convert();
+                if (type == "4") return Type4Convert();
+                if (type == "5") return Type5Convert();
+                throw new ArgumentOutOfRangeException(nameof(type));
+            }
+        }
+
+        protected virtual string OvpnConfTemplate => string.Empty;
+        protected virtual bool AdditionalTweak => true;
+
+        protected override string CountryNameKey => "flag";
+        protected override string HostnameKey => "ServerIPHost";
+        protected override string ServerTypeKey => "Protocol";
+        protected override string OvpnPortKey => "OpenVPNTCPPort";
+        protected override string OvpnKey => "CustomCert";
+
+
+        protected virtual string V2rayTypeKey => "V2RayType";
+        protected virtual string V2rayHostKey => "V2RayHost";
+        protected virtual string V2rayUuidKey => "UUID";
+        protected virtual string V2rayPathKey => "PATH";
+
+        protected virtual string V2rayProtocolType => "3";
+
+        protected virtual uint TeaDelta => 0x7A56D3E1;
+
+        protected virtual byte OuterRotate => 0;
+
+        protected XXTEA XXTEA => XXTEA.Create(TeaDelta);
+
+        protected abstract byte[] OuterKeyDerivation { get; }
+
+        protected virtual byte[] OuterKey
+        {
+            get
+            {
+                using (var sha = new SHA256Managed())
+                {
+                    return sha.ComputeHash(OuterKeyDerivation);
+                }
+            }
+        }
+
+        protected abstract byte[] OuterIV { get; }
+
+        protected virtual byte[] InnerKey { get => OuterKeyDerivation; }
+        protected abstract byte[] InnerSalt { get; }
+
+        private byte[] m_InnerSalt16;
+        private bool m_InnerSalt16Initialised = false;
+
+        protected virtual byte[] InnerSalt16
+        {
+            get
+            {
+                if (!m_InnerSalt16Initialised)
+                {
+                    m_InnerSalt16 = new byte[0x10];
+                    Buffer.BlockCopy(InnerSalt, 0, m_InnerSalt16, 0, 0x10);
+                }
+                return m_InnerSalt16;
+            }
+        }
+        protected virtual byte[] InnerSalt32 { get => InnerSalt; }
+
+
+        protected virtual byte[] InnerKeyFish { get => HkdfDeriveKey(InnerKey, InnerSalt32, 32); } // HKDF-SHA256, other hardcoded salt, hardcoded key (32 bytes derived)
+        protected virtual byte[] InnerKeyAES { get => HkdfDeriveKey(InnerKey, InnerSalt16, 16); } // HKDF-SHA256, hardcoded salt, hardcoded key (16 bytes derived)
+        protected virtual byte[] InnerIV { get => OuterIV; }
+
+        protected virtual byte[] InnerKey2 { get => Pbkdf2DeriveKey(InnerKey, InnerSalt32, 32); } // PBKDF2-SHA256, other hardcoded salt, hardcoded key (32 bytes derived)
+
+        private static byte[] s_UnusedIV = new byte[0x20];
+
+        private static byte[] Pbkdf2DeriveKey(byte[] key, byte[] salt, int length)
+        {
+            return (key, salt, length, true).SingleInstance((data) =>
+            {
+                using (var pbkdf2 = new Pbkdf2(data.key, data.salt, 100000, HashAlgorithmName.SHA256))
+                    return pbkdf2.GetBytes(data.length);
+            });
+        }
+
+        private static byte[] HkdfDeriveKey(byte[] key, byte[] salt, int length)
+        {
+            return (key, salt, length, false).SingleInstance((data) => Hkdf.DeriveKey(HashAlgorithmName.SHA256, data.key, data.length, data.salt));
+        }
+
+        private static byte[] DecodeSubstitution(string str)
+        {
+            int b = 0;
+            int bit = 0;
+
+            var ret = new List<byte>();
+            for (int i = 0; i < str.Length; i++)
+            {
+                var last = str[i];
+                if (last != '\u200b' && last != '\u200c') continue;
+                b <<= 1;
+                b |= last == '\u200c' ? 1 : 0;
+                bit++;
+                if (bit == 8)
+                {
+                    int next = (((b << 1) & 0xAAAA) | ((b >> 1) & 0x5555)) ^ 0x5A;
+                    ret.Add((byte)next);
+                    b = 0;
+                    bit = 0;
+                }
+            }
+            return ret.ToArray();
+        }
+
+        private static bool IsSubstitution(string str)
+        {
+            if (str.Length == 0) return false;
+            for (int i = 0; i < str.Length; i++)
+            {
+                var last = str[i];
+                if (last < '\u200b' || last > '\u200d') return false;
+            }
+            return true;
+        }
+
+        protected static byte[] DecryptAes(byte[] cipherTextBytes, byte[] key, byte[] iv)
+        {
+            using (var aes = new AesManaged())
+            {
+                aes.BlockSize = 128;
+                aes.KeySize = 128;
+                aes.Padding = PaddingMode.PKCS7;
+                var key128 = new byte[0x10];
+                Buffer.BlockCopy(key, 0, key128, 0, 0x10);
+                using (var dec = aes.CreateDecryptor(key128, iv))
+                {
+                    return dec.TransformFinalBlock(cipherTextBytes, 0, cipherTextBytes.Length);
+                }
+            }
+        }
+
+        private static string DecryptAes(byte[] cipherTextBytes, byte[] key)
+        {
+            using (var aes = new AesManaged())
+            {
+                var iv = new byte[0x10];
+                Buffer.BlockCopy(cipherTextBytes, 0, iv, 0, 0x10);
+                aes.BlockSize = 128;
+                aes.KeySize = 256;
+                aes.Padding = PaddingMode.PKCS7;
+                using (var dec = aes.CreateDecryptor(key, iv))
+                {
+                    return Encoding.UTF8.GetString(dec.TransformFinalBlock(cipherTextBytes, 0x10, cipherTextBytes.Length - 0x10));
+                }
+            }
+        }
+
+        protected static byte[] DecryptAes(string ciphertext, byte[] key, byte[] iv)
+        {
+            return DecryptAes(Convert.FromBase64String(ciphertext), key, iv);
+        }
+
+        private static byte[] DecryptFish(byte[] cipherTextBytes, byte[] key, bool extratweak)
+        {
+            var tweak = new ulong[2] { 0, 0 };
+            var plainTextBytes = new byte[cipherTextBytes.Length];
+            for (int offset = 0; offset < cipherTextBytes.Length; offset += 0x20)
+            {
+                using (var fish = new Threefish())
+                {
+                    fish.BlockSize = 256;
+                    fish.KeySize = 256;
+                    fish.Padding = PaddingMode.None;
+                    fish.Mode = CipherMode.ECB;
+                    fish.SetTweak(tweak);
+                    using (var dec = fish.CreateDecryptor(key, s_UnusedIV))
+                    {
+                        var data = dec.TransformFinalBlock(cipherTextBytes, offset, 0x20);
+                        Buffer.BlockCopy(data, 0, plainTextBytes, offset, data.Length);
+                    }
+                    if (extratweak) tweak[1] += 0xC0;
+                    tweak[0]++;
+                }
+            }
+            // Remove all zeroes from the end of the plaintext.
+            int len = plainTextBytes.Length;
+            while (len > 0 && plainTextBytes[len - 1] == 0) len--;
+            var ret = new byte[len];
+            Buffer.BlockCopy(plainTextBytes, 0, ret, 0, len);
+            return ret;
+        }
+
+        private static byte[] DecryptFish(string ciphertext, byte[] key, bool extratweak)
+        {
+            var cipherTextBytes = Convert.FromBase64String(ciphertext);
+            return DecryptFish(cipherTextBytes, key, extratweak);
+        }
+
+        protected override string DecryptOuter(string ciphertext)
+        {
+            var bytes = XXTEA.Decrypt(DecryptAes(ciphertext, OuterKey, OuterIV), OuterKey);
+            var rot = OuterRotate;
+            if (rot != 0)
+            {
+                for (int i = 0; i < bytes.Length; i++) bytes[i] -= rot;
+            }
+            return Encoding.UTF8.GetString(bytes);
+        }
+
+        protected override string DecryptInner(string jsonKey, string ciphertext)
+        {
+            if (jsonKey == ServerNameKey || jsonKey == PortKey || jsonKey == CountryNameKey || jsonKey == OvpnKey || jsonKey == OvpnPortKey || jsonKey == V2rayUuidKey)
+            {
+                // AES + XXTEA
+                return DecryptOuter(ciphertext);
+            }
+            else if (jsonKey == HostnameKey || jsonKey == V2rayHostKey || jsonKey == V2rayPathKey)
+            {
+                // Threefish + AES
+                return Encoding.UTF8.GetString(DecryptAes(DecryptFish(ciphertext, InnerKeyFish, AdditionalTweak), InnerKeyAES, InnerIV));
+            }
+            else if (jsonKey == UsernameKey || jsonKey == PasswordKey)
+            {
+                if (ciphertext.Length == 0) return ciphertext;
+                byte[] decode = null;
+                // (Substitution cipher or base64) + XXTEA + AES
+                if (IsSubstitution(ciphertext)) decode = DecodeSubstitution(ciphertext);
+                else decode = Convert.FromBase64String(ciphertext);
+                return DecryptAes(XXTEA.Decrypt(decode, InnerKey2), InnerKey2);
+            }
+
+            return ciphertext;
+        }
+
+        protected virtual IEnumerable<IVPNServer> ParseV2RayServer(string hostname, JsonElement server, JsonElement v2ray, Dictionary<string, string> extraRegistry)
+        {
+            string serverType = null;
+            if (!v2ray.TryGetProperty(V2rayTypeKey, out var serverTypeJson)) throw new InvalidDataException();
+            switch (serverTypeJson.ValueKind)
+            {
+                case JsonValueKind.String:
+                    serverType = serverTypeJson.GetString();
+                    break;
+                case JsonValueKind.Number:
+                    serverType = serverTypeJson.GetInt32().ToString();
+                    break;
+                default:
+                    throw new InvalidDataException();
+            }
+
+            var parser = new RenzV2rayLinkParser();
+
+            if (!v2ray.TryGetPropertyString(V2rayUuidKey, out var uuid)) throw new InvalidDataException();
+            if (!v2ray.TryGetPropertyString(V2rayPathKey, out var path)) throw new InvalidDataException();
+            if (!v2ray.TryGetPropertyString(V2rayHostKey, out var host)) throw new InvalidDataException();
+
+
+            parser.id = uuid;
+            parser.add = hostname;
+            parser.port = "443";
+            parser.host = host;
+            parser.sni = "";
+            parser.path = path;
+            parser.tls = "tls";
+
+            return V2RayServer.ParseConfigFull(parser.ConvertGeneric(serverType), extraRegistry);
+        }
+
+        protected override IEnumerable<IVPNServer> ParseServer(JsonDocument root, JsonElement server, IReadOnlyDictionary<string, string> passedExtraRegistry)
+        {
+            string serverType = null;
+            if (!server.TryGetProperty(ServerTypeKey, out var serverTypeJson)) throw new InvalidDataException();
+            switch (serverTypeJson.ValueKind)
+            {
+                case JsonValueKind.String:
+                    serverType = serverTypeJson.GetString();
+                    break;
+                case JsonValueKind.Number:
+                    serverType = serverTypeJson.GetInt32().ToString();
+                    break;
+                default:
+                    throw new InvalidDataException();
+            }
+
+            string port;
+            string username = null, password = null, ovpnconf = null;
+            string name, country;
+
+            if (!server.TryGetPropertyString(ServerNameKey, out name)) throw new InvalidDataException();
+            if (!server.TryGetPropertyString(CountryNameKey, out country)) throw new InvalidDataException();
+            if (!server.TryGetPropertyString(HostnameKey, out var hostnames)) throw new InvalidDataException();
+            if (!server.TryGetPropertyString(OvpnPortKey, out port)) throw new InvalidDataException();
+
+            if (string.IsNullOrEmpty(hostnames)) throw new InvalidDataException();
+
+            // if hostname contains semicolon then it's a list of hostnames
+            // this fork also checks for comma and tilde as separators
+            return hostnames.Split(';', ',', '~').SelectMany((hostname) =>
+            {
+                if (string.IsNullOrEmpty(hostname)) throw new InvalidDataException();
+                var extraRegistry = new Dictionary<string, string>();
+                foreach (var kv in passedExtraRegistry) extraRegistry.Add(kv.Key, kv.Value);
+                extraRegistry.Add(ServerRegistryKeys.DisplayName, name);
+                extraRegistry.Add(ServerRegistryKeys.Country, country);
+
+                switch (serverType.ToLower())
+                {
+                    case "0": // ovpn
+                        if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
+                        if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
+                        if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
+                        {
+                            if (!root.RootElement.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
+                            if (!root.RootElement.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
+                            // Anything directly in the root is not yet decrypted:
+                            username = DecryptInner(UsernameKey, username);
+                            password = DecryptInner(PasswordKey, password);
+                        }
+                        if (!server.TryGetPropertyString(OvpnKey, out ovpnconf) || string.IsNullOrEmpty(ovpnconf))
+                        {
+                            if (root.RootElement.TryGetPropertyString(OvpnKey, out ovpnconf) && !string.IsNullOrEmpty(ovpnconf)) ovpnconf = DecryptInner(OvpnKey, ovpnconf);
+                            else ovpnconf = OvpnConfTemplate.Replace("SERVERIPADDRESSHERE", hostname).Replace("0.0.0.0", hostname); // some samples use a template bundled inside the apk
+                        }
+                        if (string.IsNullOrEmpty(ovpnconf)) throw new InvalidDataException();
+                        if (OvpnPortIsBogus)
+                        {
+                            // Port in the JSON object is bogus, the real port is in the openvpn config
+                            var real = OpenVpnServer.ParseConfigFull(ovpnconf).FirstOrDefault();
+                            if (real == null || !real.Registry.TryGetValue(ServerRegistryKeys.Port, out port)) throw new InvalidDataException();
+
+                        }
+                        var ovpnRegistry = new Dictionary<string, string>();
+                        foreach (var kv in extraRegistry) ovpnRegistry.Add(kv.Key, kv.Value);
+                        ovpnRegistry.Add(ServerRegistryKeys.Username, username);
+                        ovpnRegistry.Add(ServerRegistryKeys.Password, password);
+                        return OpenVpnServer.ParseConfigFull(OpenVpnServer.InjectHostIntoConfig(ovpnconf, hostname, port), ovpnRegistry);
+                    case "1": // ssh
+                        if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
+                        if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
+                        if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
+                        {
+                            if (!root.RootElement.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
+                            if (!root.RootElement.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
+                            // Anything directly in the root is not yet decrypted:
+                            username = DecryptInner(UsernameKey, username);
+                            password = DecryptInner(PasswordKey, password);
+                        }
+                        return new SSHServer(hostname, port, username, password, extraRegistry).EnumerableSingle<IVPNServer>();
+                    // 2 => dns
+                    // 3 => v2ray
+                    // 4 => udp, maybe v2ray?
+                    default:
+                        if (serverType.ToLower() == V2rayProtocolType)
+                        {
+                            if (!server.TryGetProperty(V2RayKey, out var v2ray) || v2ray.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
+                            return ParseV2RayServer(hostname, server, v2ray, extraRegistry);
+                        }
+                        throw new InvalidDataException();
+                }
+            }).ToArray();
+        }
+    }
+
+    public abstract class SocksHttpRenzParser2<TType> : SocksHttpRenzParser<TType>
+        where TType : SocksHttpRenzParser2<TType>, new()
+    {
+        protected override byte[] OuterKey
+        {
+            get
+            {
+                using (var sha = new SHA256Managed())
+                {
+                    var hash = sha.ComputeHash(OuterKeyDerivation);
+                    var ret = new byte[0x10];
+                    Buffer.BlockCopy(hash, 0, ret, 0, 0x10);
+                    return ret;
+                }
+            }
+        }
+
+        protected override bool AdditionalTweak => false;
     }
 
     // Subclass for the most common cryptoschemes used:
