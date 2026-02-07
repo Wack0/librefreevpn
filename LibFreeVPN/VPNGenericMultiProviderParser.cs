@@ -83,23 +83,55 @@ namespace LibFreeVPN
             typeof(TParser).GetMethod("DecryptInner", BindingFlags.Instance | BindingFlags.NonPublic, null, s_DecryptInnerArgs, null)
         );
 
+        private JsonNode DecryptNode(string name, JsonElement elem)
+        {
+            if (elem.ValueKind == JsonValueKind.Object)
+            {
+                return DecryptObject(elem);
+            }
+            else if (elem.ValueKind == JsonValueKind.Array)
+            {
+                return DecryptArray(elem);
+            }
+            else if (elem.ValueKind != JsonValueKind.String)
+            {
+                return JsonValue.Create(elem);
+            } else
+            {
+                return DecryptInner(name, elem.GetString());
+            }
+        }
+
+        private void DecryptValue(JsonObject ret, JsonProperty elem)
+        {
+            ret.Add(elem.Name, DecryptNode(elem.Name, elem.Value));
+        }
+
+        private JsonArray DecryptArray(JsonElement obj)
+        {
+            var ret = new JsonArray();
+            for (int i = 0; i < ret.Count; i++) {
+                ret.Add(DecryptNode(i.ToString(), obj[i]));
+            }
+            return ret;
+        }
+
+        private JsonObject DecryptObject(JsonElement obj)
+        {
+            var ret = new JsonObject();
+            foreach (var elem in obj.EnumerateObject())
+            {
+                ret.Add(elem.Name, DecryptNode(elem.Name, elem.Value));
+            }
+            return ret;
+        }
+
         private JsonElement DecryptServer(JsonElement server)
         {
             if (server.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
             // If DecryptInner wasn't overridden then this is a no-op anyway.
             if (!s_DecryptInnerIsDerived) return server;
-            var ret = new JsonObject();
-            foreach (var elem in server.EnumerateObject())
-            {
-                if (elem.Value.ValueKind != JsonValueKind.String)
-                {
-                    // BUGBUG: any objects/arrays with crypted strings are still untouched here
-                    ret.Add(elem.Name, JsonValue.Create(elem.Value));
-                    continue;
-                }
-
-                ret.Add(elem.Name, DecryptInner(elem.Name, elem.Value.GetString()));
-            }
+            var ret = DecryptObject(server);
             return JsonDocument.Parse(ret.ToJsonString()).RootElement;
         }
 
