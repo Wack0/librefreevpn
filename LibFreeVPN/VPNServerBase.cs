@@ -23,7 +23,7 @@ namespace LibFreeVPN
         public override int GetHashCode()
         {
             var hashProtocol = Protocol.GetHashCode();
-            if (!Registry.TryGetValue(ServerRegistryKeys.Hostname, out var strToHash) && !string.IsNullOrEmpty(strToHash))
+            if (!Registry.TryGetValue(ServerRegistryKeys.Hostname, out var strToHash) || string.IsNullOrEmpty(strToHash))
                 strToHash = Config;
             return hashProtocol ^ strToHash.GetHashCode();
         }
