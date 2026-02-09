@@ -24,12 +24,10 @@ namespace LibFreeVPN.Providers.Vlist
 
         protected override Task<IEnumerable<IVPNServer>> GetServersAsyncImpl(string config)
         {
-            // Base64 decode the config
-            config = Encoding.UTF8.GetString(Convert.FromBase64String(config));
-
-            // And try to parse it
             return Task.FromResult<IEnumerable<IVPNServer>>(
                 config.Split('\n')
+                .Where((line) => !string.IsNullOrEmpty(line))
+                .SelectMany((line) => line.Contains("://") ? line.EnumerableSingle() : Encoding.UTF8.FromBase64String(line).Split('\n'))
                 .Where((line) => !string.IsNullOrEmpty(line))
                 .SelectMany((line) => V2RayServer.ParseConfigFull(line, CreateExtraRegistry()))
                 .Where((server) => server.Registry[ServerRegistryKeys.Hostname] != "0.0.0.0")
