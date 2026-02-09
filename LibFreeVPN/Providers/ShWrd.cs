@@ -24,38 +24,6 @@ namespace LibFreeVPN.Providers.SocksHttp.ShWrd
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.OpenVPN || protocol == ServerProtocol.V2Ray;
-
-
-
-        protected override string RepoName => Encoding.ASCII.FromBase64String("aHVubWFpL3dhcnJpbmdkYQ==");
-    }
-
-    public sealed class ShWrdPk : ShWrdBase<ShWrdPk.Parser>
-    {
-        public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
-        {
-            protected override string OuterKey => Encoding.ASCII.FromBase64String("cHVrYW5ndnBuMjcwQA=="    );
-        }
-
-        public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5wdWthbmd2cG4udGg=";
-
-        public override string SampleVersion => "7.4";
-
-        protected override string ConfigName => Encoding.ASCII.FromBase64String("cHVrYW5ndnBuL3VwLWZpbGUuanNvbg==");
-    }
-
-    public sealed class ShWrdKh : ShWrdBase<ShWrdKh.Parser>
-    {
-        public sealed class Parser : SocksHttpParserTeaAes<Parser>
-        {
-            protected override string OuterKey => Encoding.ASCII.FromBase64String("a2hhbXZwbjI3MEA=");
-        }
-
-        public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5oa2FtdnBuLm5ldA==";
-
-        public override string SampleVersion => "14.0";
-
-        protected override string ConfigName => Encoding.ASCII.FromBase64String("a2hhbXZwbi91cGRhdGUtZmlsZS5qc29u");
     }
 
     public sealed class ShWrdMt : ShWrdBase<ShWrdMt.Parser>
