@@ -661,6 +661,8 @@ namespace LibFreeVPN.Servers
                         username = DecryptInner(UsernameKey, username);
                         password = DecryptInner(PasswordKey, password);
                     }
+                    // port may be bogus
+                    if (port == "1194" || port == "143") port = "22";
                     return new SSHServer(hostname, port, username, password, extraRegistry).EnumerableSingle<IVPNServer>();
                 } else if (protocolType == ProtocolTypeV2ray)
                 {
