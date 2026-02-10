@@ -43,5 +43,7 @@ namespace LibFreeVPN.Providers.Vlist
         public override string SampleVersion => "1.1.5";
 
         protected override string RequestUri => Encoding.ASCII.FromBase64String("aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2lkPTFoLUI3bF9YcHAzdVozSlJYNDBienFNSmVCUkpSc2FxTCZleHBvcnQ9ZG93bmxvYWQ=");
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 2, 10);
     }
 }
