@@ -59,6 +59,8 @@ namespace LibFreeVPN.Providers.SocksHttp.ShWrd
         protected override string RepoName => Encoding.ASCII.FromBase64String("RVJST1ItVlBOL2Vycm9yLXZwbi5naXRodWIuaW8=");
 
         protected override string ConfigName => Encoding.ASCII.FromBase64String("Y29uZmlnLmpzb24=");
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 2, 10);
     }
 
     public sealed class ShWrdPnt : ShWrdBase<ShWrdPnt.Parser>
@@ -117,6 +119,8 @@ namespace LibFreeVPN.Providers.SocksHttp.ShWrd
         protected override string RepoName => Encoding.ASCII.FromBase64String("RWtyb21TU0gvTnVydWxmYWhtaQ==");
 
         protected override string ConfigName => Encoding.ASCII.FromBase64String("ZmlsZWlkYXZwbi5qc29u");
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 2, 10);
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH;
