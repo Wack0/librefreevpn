@@ -67,8 +67,8 @@ namespace LibFreeVPN.Providers.SocksHttp.ShWrd
         {
             protected override string ServerTypeKey => "Category";
             protected override uint TeaDeltaOuter => 0xD1FBFA0B;
-            protected override string OuterKey => Encoding.ASCII.FromBase64String("Y29tLnBudHZwbi5uZXQubQ==");
-            protected override int InnerKey => 7376;
+            protected override string OuterKey => Encoding.ASCII.FromBase64String("Y29tLnBudHZwbi5uZXQubWFrZWJ5c2Fuc29l");
+            protected override int InnerKey => 7361;
             protected override bool OvpnPortIsBogus => true;
 
             protected override string DecryptInner(string jsonKey, string ciphertext)
@@ -82,11 +82,11 @@ namespace LibFreeVPN.Providers.SocksHttp.ShWrd
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5wbnR2cG4ubmV0";
 
-        public override string SampleVersion => "1.0.5";
+        public override string SampleVersion => "1.0.7";
 
         protected override string RepoName => Encoding.ASCII.FromBase64String("c2Fuc29lMjAyMi9QTlRfVlBO");
 
-        protected override string ConfigName => Encoding.ASCII.FromBase64String("Y29uZmlnLmZpbGU=");
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("Y29uZmlnLmdlbg==");
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.OpenVPN;
