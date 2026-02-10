@@ -55,22 +55,6 @@ namespace LibFreeVPN.Providers.SocksHttp.ShV2x
         }
     }
 
-    public sealed class ShV2xSup : ProviderBase
-    {
-        public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS52MnJheXguc3VwcmF2cG4=";
-
-        public override string SampleVersion => "1.9.20";
-
-        protected override string RequestUri => Encoding.ASCII.FromBase64String(
-            "aHR0cHM6Ly9meGdvbGRlbnNpZ25hbHMuY29tL1RvcFZQTi92Mi9hcGkvbWFpbi5waHA/YWNjZXNzX3Rva2VuPSZHZXRTZXJ2ZXJMaXN0PSZkZWZ1YWx0U2VydmVySUQ9JmRldmljZV9pZD0maXNwPU1UTiZ2ZXJzaW9uPTU1NSZpc1BhcnRuZXJzaGlwPUZBTFNF"
-        );
-
-        public override bool HasProtocol(ServerProtocol protocol)
-            => protocol == ServerProtocol.V2Ray;
-
-
-    }
-
     public sealed class ShV2xNet : ProviderBase
     {
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS52Mm5ldC52MnJheS52cG4=";
