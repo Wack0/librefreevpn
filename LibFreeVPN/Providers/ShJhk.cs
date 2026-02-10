@@ -45,6 +45,8 @@ namespace LibFreeVPN.Providers.SocksHttp.ShJhk
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5mYXN0dnBuLmpr";
 
         public override string SampleVersion => "2.2";
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 2, 10);
     }
 
     public sealed class ShJkV : ShJhkBase<Parser4669>
@@ -54,6 +56,8 @@ namespace LibFreeVPN.Providers.SocksHttp.ShJhk
         public override string SampleSource => "aHR0cHM6Ly9naXRodWIuY29tL1RIQU5EQVJMSU4yMDE1L1Rlc3QvcmVsZWFzZXMvZG93bmxvYWQvdjIuMC4wL0pLLlZJUC5WUE5fMi4wLjAuYXBr";
 
         public override string SampleVersion => "2.0.0";
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 2, 10);
     }
 
     public sealed class ShMmt : ShJhkBase<Parser4669>
@@ -74,5 +78,7 @@ namespace LibFreeVPN.Providers.SocksHttp.ShJhk
         public override string SampleSource => "aHR0cHM6Ly9naXRodWIuY29tL0pIS1ZQTi9LT0tP";
 
         public override string SampleVersion => "N/A";
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 2, 10);
     }
 }
