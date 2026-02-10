@@ -61,6 +61,8 @@ namespace LibFreeVPN.Providers.SocksHttp.ShV2x
 
         public override string SampleVersion => "1.9.16.6";
 
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 10, 10);
+
         protected override string RequestUri => Encoding.ASCII.FromBase64String(
             "aHR0cHM6Ly9hcGkudjJuZXQubGl2ZS92Mm5ldC92Mi9hcGkvbWFpbi5waHA/YWNjZXNzX3Rva2VuPSZHZXRTZXJ2ZXJMaXN0PSZkZWZ1YWx0U2VydmVySUQ9JmRldmljZV9pZD0maXNwPU1UTiZ2ZXJzaW9uPTU1NSZpc1BhcnRuZXJzaGlwPUZBTFNF"
         );
