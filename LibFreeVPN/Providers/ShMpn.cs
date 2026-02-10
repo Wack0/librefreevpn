@@ -390,5 +390,7 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMpn
         public override string SampleVersion => "2.0";
 
         protected override string ConfigName => Encoding.ASCII.FromBase64String("c2xvd2Ruc191cGRhdGVy");
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 2, 10);
     }
 }
