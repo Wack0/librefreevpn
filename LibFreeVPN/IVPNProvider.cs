@@ -35,6 +35,12 @@ namespace LibFreeVPN
         bool RiskyRequests { get; }
 
         /// <summary>
+        /// If non-null, when this provider was last checked (on the date provided), it provided a list of servers that were all offline; and, if the update date is known, said list had not been updated in at least a month.<br/>
+        /// An abandoned provider, if not updated, may be removed in the future.
+        /// </summary>
+        DateTime? PossiblyAbandoned { get; }
+
+        /// <summary>
         /// Returns false if the list of servers is known ahead of time (that is, without any network request) to not contain at least one server with the specified protocol.
         /// Otherwise, returns true.
         /// </summary>

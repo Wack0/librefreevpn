@@ -13,6 +13,8 @@ namespace LibFreeVPN
         public abstract string SampleVersion { get; }
         public abstract bool RiskyRequests { get; }
 
+        public virtual DateTime? PossiblyAbandoned => null;
+
         public abstract bool HasProtocol(ServerProtocol protocol);
 
         protected abstract Task<IEnumerable<IVPNServer>> GetServersAsyncImpl();

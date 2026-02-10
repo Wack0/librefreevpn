@@ -85,6 +85,7 @@ namespace FreeVPNPC
 
             m_Providers = VPNProviders.Providers.Where((p) =>
             {
+                if (p.PossiblyAbandoned.HasValue) return false;
                 if (p.RiskyRequests && !checkBoxRisky.Checked) return false;
                 if (allTicked) return true;
                 return protocols.Any((prot) => p.HasProtocol(prot));

@@ -28,6 +28,9 @@ namespace FreeVPNC
             [Option('r', "risky", Default = false, HelpText = "Include providers that make risky requests (to servers ran by the developers of the sample, or entities involved with them)")]
             public bool AllowRiskyRequests { get; set; }
 
+            [Option('a', "abandoned", Default = false, HelpText = "Include providers that are possibly abandoned, that are, they have not been updated in some time and upon last tests all their servers were nonworking.")]
+            public bool AllowAbandoned { get; set; }
+
             public bool HasIncludeProtocols => IncludeProtocols.Any();
             public bool HasExcludeProtocols => ExcludeProtocols.Any();
 
@@ -38,6 +41,7 @@ namespace FreeVPNC
                 return providers.Where((prov) =>
                 {
                     if (!AllowRiskyRequests && prov.RiskyRequests) return false;
+                    if (!AllowAbandoned && prov.PossiblyAbandoned.HasValue) return false;
                     if (HasIncludeProtocols)
                     {
                         return IncludeProtocolsFiltered.Any(prot => prov.HasProtocol(prot));
@@ -98,6 +102,7 @@ namespace FreeVPNC
                 var protocols = (Enum.GetValues(typeof(ServerProtocol)) as ServerProtocol[]).Where((prot) => provider.HasProtocol(prot)).ToArray();
                 Console.WriteLine("Protocols: {0}", string.Join(", ", protocols));
                 if (provider.RiskyRequests) Console.WriteLine("Makes risky requests");
+                if (provider.PossiblyAbandoned.HasValue) Console.WriteLine("Possibly abandoned (added on {0:d})", provider.PossiblyAbandoned);
                 Console.WriteLine();
             }
             return Task.FromResult(0);
