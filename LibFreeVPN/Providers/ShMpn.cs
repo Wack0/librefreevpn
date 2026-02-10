@@ -363,6 +363,8 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMpn
         protected override string RepoName => Encoding.ASCII.FromBase64String("YWJkb2VsMTAzL3pvbmV0dW5uZWw=");
 
         protected override string ConfigName => Encoding.ASCII.FromBase64String("YmlnanNvbg==");
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 2, 10);
     }
 
     public sealed class ShMpnMp : ShMpnRotBase<ParserRot>
