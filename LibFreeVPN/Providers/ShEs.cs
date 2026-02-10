@@ -1,14 +1,6 @@
-﻿using LibFreeVPN.Memecrypto;
-using LibFreeVPN.ProviderHelpers;
+﻿using LibFreeVPN.ProviderHelpers;
 using LibFreeVPN.Servers;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace LibFreeVPN.Providers.SocksHttp
 {
@@ -16,16 +8,14 @@ namespace LibFreeVPN.Providers.SocksHttp
 
     public sealed class ShEs : VPNProviderHttpGetBase<ShEs.Parser>
     {
-        public sealed class Parser : SocksHttpWithOvpnParserTea<Parser>
+        public sealed class Parser : SocksHttpWithOvpnParserAesGcmHkdf<Parser>
         {
-            protected override string OvpnKey => "setOpenVPN";
-
-            protected override string OuterKey => Encoding.ASCII.FromBase64String("YU5MY0cyRlQ2OXZBQk5CcQ==");
+            protected override string OuterKeyId => Encoding.ASCII.FromBase64String("bHswWyR+QTFncmczK2sxSGh5TUs3LklsRiFtJV5CMEFLZnFwT2MwZw==");
         }
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5taXNha2kuZXNhbnZwbg==";
 
-        public override string SampleVersion => "1.3.6";
+        public override string SampleVersion => "1.4.5";
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.OpenVPN;

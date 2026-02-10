@@ -105,7 +105,7 @@ namespace LibFreeVPN.Servers
                 case "ssh":
                     if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
                     if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
-                    if (!server.TryGetPropertyString(OvpnKey, out ovpnconf))
+                    if (!server.TryGetPropertyString(OvpnKey, out ovpnconf) || string.IsNullOrEmpty(ovpnconf))
                     {
                         if (root.RootElement.TryGetPropertyString(OvpnKey, out ovpnconf)) ovpnconf = DecryptInner(OvpnKey, ovpnconf);
                         else ovpnconf = null;
@@ -183,7 +183,7 @@ namespace LibFreeVPN.Servers
                 {
                     if (!server.TryGetPropertyString(UsernameKey, out username)) throw new InvalidDataException();
                     if (!server.TryGetPropertyString(PasswordKey, out password)) throw new InvalidDataException();
-                    if (!server.TryGetPropertyString(OvpnKey, out ovpnconf))
+                    if (!server.TryGetPropertyString(OvpnKey, out ovpnconf) || string.IsNullOrEmpty(ovpnconf))
                     {
                         if (root.RootElement.TryGetPropertyString(OvpnKey, out ovpnconf)) ovpnconf = DecryptInner(OvpnKey, ovpnconf);
                         else ovpnconf = null;
@@ -714,6 +714,45 @@ namespace LibFreeVPN.Servers
             if (jsonKey != HostnameKey && jsonKey != UsernameKey && jsonKey != PasswordKey && jsonKey != OvpnKey && jsonKey != V2RayKey) return ciphertext;
 
             return Encoding.UTF8.GetString(Convert.FromBase64String(ciphertext));
+        }
+    }
+
+    public abstract class SocksHttpWithOvpnParserAesGcmHkdf<TType> : SocksHttpWithOvpnParser<TType>
+        where TType : SocksHttpWithOvpnParserAesGcmHkdf<TType>, new()
+    {
+        protected override string OvpnKey => "setOpenVPN";
+
+        protected override string ServerNameKey => "ServerName";
+        protected override string CountryNameKey => "ServerFlag";
+
+        protected abstract string OuterKeyId { get; }
+        protected virtual byte[] OuterKeySeed => "TVlfQVBQX0ZJWEVEX1NBTFRfVjE=".FromBase64String();
+        protected virtual byte[] OuterKeyData => "TVlfU0VDVVJFX0pTT05fU1RSRUFNX1Yx".FromBase64String();
+        protected virtual HashAlgorithmName HashAlgorithm => HashAlgorithmName.SHA256;
+        protected virtual int PbkdfRounds => 100000;
+
+
+
+        protected override string DecryptInner(string jsonKey, string ciphertext)
+        {
+            if (jsonKey != HostnameKey && jsonKey != UsernameKey && jsonKey != PasswordKey && jsonKey != OvpnKey && jsonKey != V2RayKey) return ciphertext;
+
+            if (ciphertext.StartsWith("ED:")) return Encoding.UTF8.GetString(Base32Encoding.ToBytes(ciphertext.Substring(3)));
+
+            return Encoding.UTF8.GetString(Convert.FromBase64String(ciphertext));
+        }
+
+        protected override string DecryptOuter(string ciphertext)
+        {
+            var bytes = Convert.FromBase64String(ciphertext);
+            var iv = new byte[0x10];
+
+            byte[] kek = null;
+            using (var pbkdf2 = new Pbkdf2(OuterKeyId, OuterKeySeed, PbkdfRounds, HashAlgorithm))
+                kek = pbkdf2.GetBytes(0x20);
+
+            var gcmhkdf = new AesGcmHkdfStreaming(HashAlgorithmName.SHA256, 0x20, 0x1000);
+            return Encoding.UTF8.GetString(gcmhkdf.Decrypt(kek, OuterKeyData, bytes));
         }
     }
 
