@@ -371,9 +371,9 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMpn
     {
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPXZwbi5taW5hcHJvbmV0LmNvbS5lZw==";
 
-        public override string SampleVersion => "58.0";
+        public override string SampleVersion => "69.0";
 
-        protected override string ConfigName => Encoding.ASCII.FromBase64String("bWluYXByb25ldF91cGRhdGVy");
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("bWluYXByb25ldC51cGRhdGVy");
     }
     public sealed class ShMpnOc : ShMpnRotBase<ParserRot>
     {
