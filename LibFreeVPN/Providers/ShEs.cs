@@ -15,11 +15,11 @@ namespace LibFreeVPN.Providers.SocksHttp
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5taXNha2kuZXNhbnZwbg==";
 
-        public override string SampleVersion => "1.4.5";
+        public override string SampleVersion => "1.4.8";
 
         public override bool HasProtocol(ServerProtocol protocol) =>
             protocol == ServerProtocol.SSH || protocol == ServerProtocol.OpenVPN;
 
-        protected override string RequestUri => Encoding.ASCII.FromBase64String("aHR0cHM6Ly9lLXNhbi12cG4uaW4ubmV0L1VwZGF0ZS9lLXNhbi12cG4uanNvbg==");
+        protected override string RequestUri => Encoding.ASCII.FromBase64String("aHR0cHM6Ly9lLXNhbi12cG4uaW4ubmV0L1VwZGF0ZVNlcnZlci9lLXNhbi12cG4uanNvbg==");
     }
 }
