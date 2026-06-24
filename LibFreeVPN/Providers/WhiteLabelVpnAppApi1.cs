@@ -18,9 +18,9 @@ namespace LibFreeVPN.Providers
         public override string Name => s_Name;
         private static readonly string s_Name = nameof(WhiteLabelVpnAppApi1);
 
-        public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS54bngudnBuYmx1ZXByb3h5";
+        public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5pbmRpYWZyZWV2cG51LmFwcA==";
 
-        public override string SampleVersion => "1.61";
+        public override string SampleVersion => "14.3";
 
         public override bool RiskyRequests => true;
 
@@ -63,7 +63,7 @@ namespace LibFreeVPN.Providers
         }
 
         private static readonly string s_RequestUri = Encoding.ASCII.GetString(Convert.FromBase64String("aHR0cHM6Ly9kZXZlbG9wZXIub25lY29ubmVjdC50b3Avdmlldy9mcm9udC9jb250cm9sbGVyLnBocA=="));
-        private static readonly byte[] s_PostData = Convert.FromBase64String("YWN0aW9uPWZldGNoVXNlclNlcnZlcnMmcGFja2FnZV9uYW1lPWNvbS54bngudnBuYmx1ZXByb3h5JmFwaV9rZXk9QUVJRU1tLlVqSWRQLld0Sy5RdUtjYThZWlFxaVd2blVUR0FRZ2tZcndURXBWYUZpaU4mdHlwZT1wcm8=");
+        private static readonly byte[] s_PostData = Convert.FromBase64String("YWN0aW9uPWZldGNoVXNlclNlcnZlcnMmcGFja2FnZV9uYW1lPWNvbS5pbmRpYWZyZWV2cG51LmFwcCZhcGlfa2V5PTZqYi5XQXN2QTMuV3lNWVRnNXJRM1pLNG1BN2h6dGFYdGR5OU5NeWRZa2F3YUVwT0JrJnR5cGU9cHJv");
         protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
         {
             // single POST request gives out some JSON.
