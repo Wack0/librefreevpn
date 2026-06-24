@@ -53,5 +53,10 @@ namespace LibFreeVPN
         /// </summary>
         /// <returns>Task object representing the asynchronous operation. On success, returns an iterator over a collection of VPN servers.</returns>
         Task<IEnumerable<IVPNServer>> GetServersAsync();
+
+        /// <summary>
+        /// Resets any saved object state to allow for multiple requests using a single process to be correct.
+        /// </summary>
+        void Reset();
     }
 }

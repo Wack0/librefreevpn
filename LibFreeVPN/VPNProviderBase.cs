@@ -46,5 +46,7 @@ namespace LibFreeVPN
                 { ServerRegistryKeys.ProviderName, name }
             };
         }
+
+        public virtual void Reset() { }
     }
 }

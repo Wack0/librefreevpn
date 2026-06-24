@@ -324,6 +324,11 @@ namespace LibFreeVPN.Providers.Addy
             // And parse what was obtained.
             return await GetServersAsyncImpl<TParser>(servers);
         }
+
+        public override void Reset()
+        {
+            s_KnownC2s.Clear();
+        }
     }
 
     public abstract class AddyBaseNew : VPNProviderGithubRepoFileBase
@@ -509,6 +514,11 @@ namespace LibFreeVPN.Providers.Addy
 
             // And parse what was obtained.
             return await GetServersAsyncImpl<AddyParserNewBase>(servers);
+        }
+
+        public override void Reset()
+        {
+            s_KnownC2s.Clear();
         }
     }
 

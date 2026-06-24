@@ -156,6 +156,7 @@ namespace FreeVPNPC
         {
             buttonGet.Enabled = false;
             var providers = m_Providers.Where((prov, index) => checkedListBoxProvider.GetItemChecked(index));
+            foreach (var provider in providers) provider.Reset();
             var tasks = providers.Select((prov) => prov.GetServersAsync()).ToArray();
             await Task.WhenAll(tasks);
 
