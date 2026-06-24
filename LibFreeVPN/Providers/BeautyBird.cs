@@ -1,4 +1,5 @@
-﻿using LibFreeVPN.Servers;
+﻿using LibFreeVPN.ProviderHelpers;
+using LibFreeVPN.Servers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +17,7 @@ namespace LibFreeVPN.Providers
     // Configs are split by "country" but this seems meaningless, one check of "US" config gave two endpoints, one in .nl and one in .dk
     // Configs are updated multiple times per hour.
     // Each config includes at least one endpoint entunneling through websockets on cloudflare with randomly generated registered domains.
-    public sealed class BeautyBird : VPNProviderBase
+    public sealed class BeautyBird : VPNProviderGithubRepoFilesBase
     {
         private static readonly string s_Name = nameof(BeautyBird);
         public override string Name => s_Name;
@@ -50,6 +51,7 @@ namespace LibFreeVPN.Providers
         };
 
         private static readonly string s_RepoName = Encoding.ASCII.GetString(Convert.FromBase64String("R3lyZmFsY29uVlBOL25vZGVz"));
+        protected override string RepoName => s_RepoName;
 
         private static IEnumerable<IVPNServer> ParseJson(JsonElement json)
         {
@@ -96,24 +98,12 @@ namespace LibFreeVPN.Providers
             }
         }
 
-        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
+        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl(IEnumerable<string> files)
         {
-            var httpClient = ServerUtilities.HttpClient;
-            // Get the list of files in the root of the repository
-            HttpResponseMessage listResponse = null;
-            using (var listRequest = new HttpRequestMessage(HttpMethod.Get, string.Format("https://github.com/{0}/tree-commit-info/main", s_RepoName)))
-            {
-                listRequest.Headers.Accept.ParseAdd("application/json");
-                listResponse = await httpClient.SendAsync(listRequest);
-            }
-
-            var listJsonStr = await listResponse.Content.ReadAsStringAsync();
-            var listJson = JsonDocument.Parse(listJsonStr);
-            if (listJson.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
             // take the filenames we want, convert them to their URLs
-            var configUrls = listJson.RootElement.EnumerateObject()
-                .Where((prop) => prop.Name.StartsWith("node") && prop.Name.EndsWith(".txt"))
-                .Select((prop) => string.Format("https://raw.githubusercontent.com/{0}/main/{1}", s_RepoName, prop.Name));
+            var configUrls = files
+                .Where((file) => file.StartsWith("node") && file.EndsWith(".txt"))
+                .Select((file) => RequestUriGetter(file));
 
             // for each of them, download and parse them all
             var configTasks = configUrls.Select((url) => TryGetServersAsync(url)).ToList();

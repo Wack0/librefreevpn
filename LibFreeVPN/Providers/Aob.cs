@@ -1,4 +1,5 @@
-﻿using LibFreeVPN.Servers;
+﻿using LibFreeVPN.ProviderHelpers;
+using LibFreeVPN.Servers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +14,7 @@ namespace LibFreeVPN.Providers
 {
     // Android apps. v2ray(vless) with regular v2ray-client json config. C2 is custom servers, pointed to by a github repo.
     // Some iterations point to dummy configs on github.
-    public sealed class Aob : VPNProviderBase
+    public sealed class Aob : VPNProviderGithubRepoFilesBase
     {
         private static readonly string s_Name = nameof(Aob);
         public override string Name => s_Name;
@@ -33,6 +34,9 @@ namespace LibFreeVPN.Providers
         private static readonly string s_CountryKey = Encoding.ASCII.GetString(Convert.FromBase64String("aG9zdG5hbWU="));
 
         private static readonly string s_FirstToSecondKey = Encoding.ASCII.GetString(Convert.FromBase64String("YmFja2VuZFVybHM="));
+
+        protected override string RepoName => s_RepoName;
+        protected override string BranchName => "master";
 
         private static IEnumerable<IVPNServer> ParseJson(JsonElement json)
         {
@@ -100,24 +104,12 @@ namespace LibFreeVPN.Providers
             }
         }
 
-        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl()
+        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl(IEnumerable<string> files)
         {
-            var httpClient = ServerUtilities.HttpClient;
-            // Get the list of files in the root of the repository
-            HttpResponseMessage listResponse = null;
-            using (var listRequest = new HttpRequestMessage(HttpMethod.Get, string.Format("https://github.com/{0}/tree-commit-info/master", s_RepoName)))
-            {
-                listRequest.Headers.Accept.ParseAdd("application/json");
-                listResponse = await httpClient.SendAsync(listRequest);
-            }
-
-            var listJsonStr = await listResponse.Content.ReadAsStringAsync();
-            var listJson = JsonDocument.Parse(listJsonStr);
-            if (listJson.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
             // take the filenames we want, convert them to their URLs
-            var configUrls = listJson.RootElement.EnumerateObject()
-                .Where((prop) => prop.Name.EndsWith(".txt"))
-                .Select((prop) => string.Format("https://raw.githubusercontent.com/{0}/master/{1}", s_RepoName, prop.Name));
+            var configUrls = files
+                .Where((file) => file.EndsWith(".txt"))
+                .Select((file) => RequestUriGetter(file));
 
             // for each of them, download and parse them all
             var configTasks = configUrls.Select((url) => TryGetServersAsync(url)).ToList();
