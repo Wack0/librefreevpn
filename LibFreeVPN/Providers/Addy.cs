@@ -1,4 +1,7 @@
-﻿using LibFreeVPN.Memecrypto;
+﻿using ICSharpCode.SharpZipLib.GZip;
+using ICSharpCode.SharpZipLib.Zip;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using LibFreeVPN.Memecrypto;
 using LibFreeVPN.ProviderHelpers;
 using LibFreeVPN.Servers;
 using LibFreeVPN.Servers.V2Ray;
@@ -6,6 +9,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -13,6 +17,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 // Android apps. Gives out v2ray configs. Risky requests (actual C2 domain obtained from github repo)
 // The github account involved has almost 200 repos at time of implementation.
@@ -109,6 +114,35 @@ namespace LibFreeVPN.Providers.Addy
 
                     return V2RayServer.ParseConfigFull(DecryptAllInner(thisConfig), registry);
                 });
+            }).ToList();
+        }
+    }
+
+    public sealed class AddyParserNewBase : VPNGenericMultiProviderParser<AddyParserNewBase>
+    {
+        public override IEnumerable<IVPNServer> Parse(string config, IReadOnlyDictionary<string, string> extraRegistry)
+        {
+            var json = JsonDocument.Parse(config);
+            if (json.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
+            if (!json.RootElement.TryGetProperty("configs", out var configs)) throw new InvalidDataException();
+            if (configs.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
+            return configs.EnumerateObject().SelectMany((op) =>
+            {
+                var obj = op.Value;
+                if (obj.ValueKind == JsonValueKind.Array) return obj.EnumerateArray();
+                return Enumerable.Empty<JsonElement>();
+            }).SelectMany((op) =>
+            {
+                if (json.RootElement.ValueKind != JsonValueKind.Object) return Enumerable.Empty<IVPNServer>();
+                if (!op.TryGetPropertyString("country", out var country)) return Enumerable.Empty<IVPNServer>();
+                JsonElement? id = null;
+                if (op.TryGetProperty("id", out var _id)) id = _id;
+                if (!op.TryGetPropertyString("config", out var thisConfig)) return Enumerable.Empty<IVPNServer>();
+                var registry = new Dictionary<string, string>();
+                foreach (var kv in extraRegistry) registry.Add(kv.Key, kv.Value);
+                if (id != null) registry.Add(ServerRegistryKeys.DisplayName, id.Value.GetRawText());
+                if (!string.IsNullOrEmpty(country)) registry.Add(ServerRegistryKeys.Country, country);
+                return V2RayServer.ParseConfigFull(thisConfig, registry);
             }).ToList();
         }
     }
@@ -292,18 +326,197 @@ namespace LibFreeVPN.Providers.Addy
         }
     }
 
-    public sealed class AddyPro : AddyBase<AddyPro.Parser>
+    public abstract class AddyBaseNew : VPNProviderGithubRepoFileBase
     {
-        public sealed class Parser : AddyParserBase<Parser>
+        protected static ConcurrentDictionary<string, byte> s_KnownC2s = new ConcurrentDictionary<string, byte>(); // to ensure that each known C2 is only hit once, for several clients using the same C2
+
+        public override bool RiskyRequests => true; // github repo request is here only used to get the actual C2 server
+
+        public override bool HasProtocol(ServerProtocol protocol)
+            => protocol == ServerProtocol.V2Ray;
+
+        private static string RepoNameGetter(AddyBaseNew self) => string.Format("{0}/{1}", self.AccountName, self.C2RepoName);
+
+        protected sealed override string RepoName => this.SingleInstanceByType(RepoNameGetter);
+
+        protected abstract string OuterSeed { get; }
+        protected virtual byte[] OuterIV => ("NTE4MzY2NmM3MmVlYzllNA==").FromBase64String();
+        protected virtual string AccountName => Encoding.ASCII.FromBase64String("czc0MWRldg==");
+
+        protected virtual string PackageName => Encoding.ASCII.FromBase64String(SampleSource).Split('=').Last();
+
+        protected virtual string PackageNameSuffix => "v1";
+
+        protected virtual string C2RepoName => MD5Hash(PackageName);
+
+        protected override string ConfigName => MD5Hash(new StringBuilder(PackageName).Append(PackageNameSuffix));
+
+        private static readonly string s_GetServersPath = Encoding.ASCII.GetString(Convert.FromBase64String("L2FwaS92MS9hcHBzL2FwcC1kYXRh"));
+        protected abstract string C2ApiKey { get; }
+
+        private static string MD5Hash(string str)
         {
-            protected override byte[] IdKey => ("TXFwV3o5Sk5mS3NHeFVkNg==").FromBase64String();
-            protected override byte[] IdIv => ("a05nRDRMeDlSVm1qdXRFaw==").FromBase64String();
+            using (var md5 = MD5.Create())
+            {
+                return BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(str))).Replace("-", "").ToLower();
+            }
         }
+
+        private static string MD5Hash(StringBuilder sb) => MD5Hash(sb.ToString());
+
+        private static byte[] GzipUncompress(byte[] data)
+        {
+            try
+            {
+                using (var stream = new GZipInputStream(new MemoryStream(data)))
+                using (var ms = new MemoryStream())
+                {
+                    stream.CopyTo(ms);
+                    return ms.ToArray();
+                }
+            } catch { return null; }
+        }
+
+        private static byte[] InflaterDecompress(byte[] data)
+        {
+            try
+            {
+                using (var stream = new InflaterInputStream(new MemoryStream(data)))
+                using (var ms = new MemoryStream())
+                {
+                    stream.CopyTo(ms);
+                    return ms.ToArray();
+                }
+            }
+            catch { return null; }
+        }
+
+        private static byte[] InflaterDecompress2(byte[] data)
+        {
+            try
+            {
+                using (var stream = new InflaterInputStream(new MemoryStream(data), new ICSharpCode.SharpZipLib.Zip.Compression.Inflater(true)))
+                using (var ms = new MemoryStream())
+                {
+                    stream.CopyTo(ms);
+                    return ms.ToArray();
+                }
+            }
+            catch { return null; }
+        }
+
+        private static byte[] ZipDecompress(byte[] data)
+        {
+            try
+            {
+                using (var stream = new ZipInputStream(new MemoryStream(data)))
+                using (var ms = new MemoryStream())
+                {
+                    var entry = stream.GetNextEntry();
+                    if (entry == null) return null;
+                    stream.CopyTo(ms);
+                    return ms.ToArray();
+                }
+            }
+            catch { return null; }
+        }
+
+        private string DecryptFromServer(string ciphertext)
+        {
+            if (ciphertext[0] == '{')
+            {
+                if (JsonDocument.Parse(ciphertext).RootElement.TryGetPropertyString("data", out var _data))
+                    ciphertext = _data;
+            }
+            // Calculate the key:
+            byte[] key = null;
+            using (var hash = SHA256.Create())
+            {
+                var h = hash.ComputeHash(Encoding.UTF8.GetBytes(OuterSeed));
+                key = h;
+            }
+
+            byte[] data = Convert.FromBase64String(ciphertext);
+            byte[] iv = new byte[0x10];
+            byte[] ciphertextBytes = new byte[data.Length - 0x10];
+            Buffer.BlockCopy(data, 0, iv, 0, 0x10);
+            Buffer.BlockCopy(data, 0x10, ciphertextBytes, 0, ciphertextBytes.Length);
+
+            var plainText = AesCtr.Transform(key, iv, ciphertextBytes);
+
+            // Move forward past any initial whitespace.
+            int index = 0;
+            bool unCompressed = false;
+            for (; index < plainText.Length; index++)
+            {
+                byte b = plainText[index];
+                if (b == (byte)'\t' || b == (byte)' ' || b == (byte)'\r' || b == (byte)'\n') continue;
+                if (b == (byte)'{' || b == (byte)'[') unCompressed = true;
+                break;
+            }
+
+            if (index >= plainText.Length || !unCompressed)
+            {
+                // first try gzip
+                var decomp = GzipUncompress(plainText);
+                if (decomp == null) decomp = InflaterDecompress(plainText);
+                if (decomp == null) decomp = InflaterDecompress2(plainText);
+                if (decomp == null) decomp = ZipDecompress(plainText);
+                if (decomp == null) throw new InvalidDataException();
+                plainText = decomp;
+            }
+
+            return Encoding.ASCII.GetString(plainText);
+        }
+        private void InitHeaders(HttpRequestHeaders headers)
+        {
+            headers.Authorization = AuthenticationHeaderValue.Parse("ApiKey " + C2ApiKey);
+        }
+
+        protected override async Task<IEnumerable<IVPNServer>> GetServersAsyncImpl(string c2)
+        {
+            // Decrypt the C2 server.
+            c2 = DecryptFromServer(c2);
+
+            if (JsonDocument.Parse(c2).RootElement.TryGetPropertyString("baseUrl", out var baseUrl))
+                c2 = baseUrl;
+
+            // Ensure it looks correct.
+            if (!c2.StartsWith("http")) throw new InvalidDataException();
+
+            if (c2.EndsWith("/")) c2 = c2.Substring(0, c2.Length - 1);
+
+            // Make sure this C2 server hasn't been contacted this session.
+            if (!s_KnownC2s.TryAdd(c2, 1)) return Enumerable.Empty<IVPNServer>();
+
+            // yay, the C2 no longer requires a ""tracking ID"" insert to get the configs!
+            HttpResponseMessage response = null;
+            using (var request = new HttpRequestMessage(HttpMethod.Get, c2 + s_GetServersPath))
+            {
+                InitHeaders(request.Headers);
+                response = await ServerUtilities.HttpClient.SendAsync(request);
+            }
+
+            var serversText = await response.Content.ReadAsStringAsync();
+
+            // Pull the ciphertext out of the json object.
+            var serversResponseJson = JsonDocument.Parse(serversText);
+            if (serversResponseJson.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
+            if (!serversResponseJson.RootElement.TryGetPropertyString("data", out var servers)) throw new InvalidDataException();
+
+            // And decrypt it.
+            servers = DecryptFromServer(servers);
+
+            // And parse what was obtained.
+            return await GetServersAsyncImpl<AddyParserNewBase>(servers);
+        }
+    }
+
+    public sealed class AddyPro : AddyBaseNew
+    {
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS52cG4udjJwcm8=";
 
-        public override string SampleVersion => "90.0";
-
-        protected override string C2RepoName => Encoding.ASCII.FromBase64String("djJwcm92cG4=");
+        public override string SampleVersion => "110.2";
 
         protected override string OuterSeed => Encoding.ASCII.FromBase64String(
             "MzA4MjA1ODkzMDgyMDM3MWEwMDMwMjAxMDIwMjE1MDBhN2UxODZjMjlhZDkxM2I2MGVmNGM4M2Zj" +
@@ -361,20 +574,11 @@ namespace LibFreeVPN.Providers.Addy
         protected override string C2ApiKey => Encoding.ASCII.FromBase64String("NGQwN2E1MDEtODBhNi00MzI2LWE4YWItZDYzMDUyMGY0N2Vi");
     }
 
-    public sealed class AddyV2V : AddyBase<AddyV2V.Parser>
+    public sealed class AddyV2V : AddyBaseNew
     {
-        public sealed class Parser : AddyParserBase<Parser>
-        {
-            protected override byte[] IdKey => ("WWhOY1F3eDJrc01WbkpqdA==").FromBase64String();
-            protected override byte[] IdIv => ("dFp3bjNwTGpLZm1SUWpoNg==").FromBase64String();
-        }
-
-
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS52MnJheS52MnZwbg==";
 
-        public override string SampleVersion => "90.0";
-
-        protected override string C2RepoName => Encoding.ASCII.FromBase64String("djJ2cG4=");
+        public override string SampleVersion => "110.2";
 
         protected override string OuterSeed => Encoding.ASCII.FromBase64String(
             "MzA4MjA1ODgzMDgyMDM3MGEwMDMwMjAxMDIwMjE0Njc1OGE3MGJiMzZkZTg5MDA2OGM0NGFkN2Fh" +
@@ -432,20 +636,11 @@ namespace LibFreeVPN.Providers.Addy
         protected override string C2ApiKey => Encoding.ASCII.FromBase64String("YWY5NDlhMDMtOWFiYy00MmFhLWE4OGEtMTM1ZWI4NGYwODA4");
     }
 
-    public sealed class AddyBox : AddyBase<AddyBox.Parser>
+    public sealed class AddyBox : AddyBaseNew
     {
-        public sealed class Parser : AddyParserBase<Parser>
-        {
-            protected override byte[] IdKey => ("Z1pWTjltcDVMbnhKUXJzdA==").FromBase64String();
-            protected override byte[] IdIv => ("alRzM1JwaE12eGZMb25nWQ==").FromBase64String();
-        }
-
-
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS52cG4udjJib3g=";
 
-        public override string SampleVersion => "90.0";
-
-        protected override string C2RepoName => Encoding.ASCII.FromBase64String("djJib3h2cG4=");
+        public override string SampleVersion => "110.2";
 
         protected override string OuterSeed => Encoding.ASCII.FromBase64String(
             "MzA4MjA1ODkzMDgyMDM3MWEwMDMwMjAxMDIwMjE1MDBmZmQ3ZDExNTZlMzY5MDdiYzI3NWM4NDIz" +
