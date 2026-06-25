@@ -339,7 +339,7 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMpn
 
         protected override string RepoName => Encoding.ASCII.FromBase64String("YWJkb2VsMTAzL3pvbmV0dW5uZWw=");
 
-        protected override string ConfigName => Encoding.ASCII.FromBase64String("YmlnanNvbg==");
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("YmVlMnNwaW5uZXI=");
     }
 
     public sealed class ShMpnBee2 : ShMpnBase<ParserXxtea>
@@ -351,6 +351,8 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMpn
         protected override string RepoName => Encoding.ASCII.FromBase64String("YWJkb2VsMTAzL3pvbmV0dW5uZWw=");
 
         protected override string ConfigName => Encoding.ASCII.FromBase64String("emNiYw==");
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 06, 25); // last update 2026-03-10, all servers dead
     }
 
     public sealed class ShMpnBee3 : ShMpnBase<ParserXxtea>
@@ -371,9 +373,11 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMpn
     {
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPXZwbi5taW5hcHJvbmV0LmNvbS5lZw==";
 
-        public override string SampleVersion => "69.0";
+        public override string SampleVersion => "81.0";
 
-        protected override string ConfigName => Encoding.ASCII.FromBase64String("bWluYXByb25ldC51cGRhdGVy");
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("bWluYXByb25ldC5qc29u");
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 06, 25);
     }
     public sealed class ShMpnOc : ShMpnRotBase<ParserRot>
     {
@@ -382,6 +386,8 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMpn
         public override string SampleVersion => "7.0";
 
         protected override string ConfigName => Encoding.ASCII.FromBase64String("b3BlbmN1c3RvbV91cGRhdGVy");
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 06, 25);
     }
     public sealed class ShMpnSd : ShMpnRotBase<ParserRot>
     {
