@@ -775,5 +775,7 @@ namespace LibFreeVPN.Providers.Addy
             "ZHgudnBuYXBw");
 
         protected override string C2ApiKey => Encoding.ASCII.FromBase64String("ZmIxYzEzNmUtOGQyMy00OGMzLTliMWMtOGFiYWJlYWE0MWFh");
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 6, 24);
     }
 }
