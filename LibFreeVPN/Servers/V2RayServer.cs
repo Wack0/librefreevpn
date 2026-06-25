@@ -69,7 +69,7 @@ namespace LibFreeVPN.Servers
                     return (config.Trim(), host, parsed.Port.ToString()).EnumerableSingle();
                 }
 
-                if (config.StartsWith("ss://"))
+                if (config.StartsWith("ss://") || config.StartsWith("trojan://"))
                 {
                     var parsed = new Uri(config.Trim());
 
@@ -434,7 +434,7 @@ namespace LibFreeVPN.Servers
                     return;
                 }
 
-                if (config.StartsWith("vless://") || config.StartsWith("ss://"))
+                if (config.StartsWith("vless://") || config.StartsWith("ss://") || config.StartsWith("trojan://"))
                 {
                     if (!registry.ContainsKey(ServerRegistryKeys.DisplayName))
                     {
