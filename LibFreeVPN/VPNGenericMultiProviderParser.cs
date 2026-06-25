@@ -34,7 +34,7 @@ namespace LibFreeVPN
         }
     }
     /// <summary>
-    /// Base class for a multi-provider parser for a JSON object with an array of servers where 
+    /// Base class for a multi-provider parser for a JSON object with an array of servers where both the outer JSON and inner values may need decryption or deobfuscation.
     /// </summary>
     /// <typeparam name="TParser">Object implementing this class</typeparam>
     public abstract class VPNJsonArrInObjMultiProviderParser<TParser> : VPNGenericMultiProviderParser<TParser>
@@ -150,17 +150,25 @@ namespace LibFreeVPN
             config = DecryptOuter(config);
 
             var json = JsonDocument.Parse(config);
-            if (json.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
+            JsonElement servers;
+            if (json.RootElement.ValueKind == JsonValueKind.Array) servers = json.RootElement;
+            else
+            {
+                if (json.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
 
-            if (!json.RootElement.TryGetProperty(ServersArrayKey, out var servers)) throw new InvalidDataException();
-            if (servers.ValueKind != JsonValueKind.Array) throw new InvalidDataException();
+                if (!json.RootElement.TryGetProperty(ServersArrayKey, out servers)) throw new InvalidDataException();
+                if (servers.ValueKind != JsonValueKind.Array) throw new InvalidDataException();
+            }
 
             IEnumerable<JsonElement> serversEnum = servers.EnumerateArray();
-            foreach (var key in OptionalServersArrayKeys)
+            if (json.RootElement.ValueKind == JsonValueKind.Object)
             {
-                if (!json.RootElement.TryGetProperty(key, out var optional)) continue;
-                if (optional.ValueKind != JsonValueKind.Array) continue;
-                serversEnum = serversEnum.Concat(optional.EnumerateArray());
+                foreach (var key in OptionalServersArrayKeys)
+                {
+                    if (!json.RootElement.TryGetProperty(key, out var optional)) continue;
+                    if (optional.ValueKind != JsonValueKind.Array) continue;
+                    serversEnum = serversEnum.Concat(optional.EnumerateArray());
+                }
             }
 
             return serversEnum.SelectMany((server) => TryParseServer(json, server, extraRegistry)).Distinct();
