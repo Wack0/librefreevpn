@@ -257,6 +257,27 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMpn
         public string DecryptString(string ciphertext) => DecryptOuter(ciphertext); 
     }
 
+    public sealed class ParserNew : SocksHttpParser<ParserNew>
+    {
+        protected override string ServerNameKey => "name";
+        protected override string CountryNameKey => "country";
+        protected override string V2RayKey => "config_uri";
+        protected override string HostnameKey => "host";
+        protected override string PortKey => "port";
+        protected override string UsernameKey => "uuid";
+        protected override string PasswordKey => "password";
+        protected override string ServerTypeKey => "protocol";
+
+
+        protected override string DecryptInner(string jsonKey, string ciphertext)
+        {
+            // override ServerTypeKey (it's the underlying v2ray protocol) to specify v2ray
+            if (jsonKey == ServerTypeKey) return "v2ray";
+            return ciphertext;
+        }
+
+    }
+
     public sealed class ParserConfigRot : ParserBaseRot<ParserConfigRot>
     {
         protected override string OuterKeyId => m_OuterKeyId;
@@ -398,5 +419,19 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMpn
         protected override string ConfigName => Encoding.ASCII.FromBase64String("c2xvd2Ruc191cGRhdGVy");
 
         public override DateTime? PossiblyAbandoned => new DateTime(2026, 2, 10);
+    }
+
+    public sealed class ShMpnPub : ShMpnBase<ParserNew>
+    {
+        // Latest clients of this kind support downloading a plaintext config of tested v2ray servers obtained from many (200+) public sources.
+        // A vibecoded python script running in github actions does check all sources every hour and commit latest set.
+
+        public override string SampleSource => "aHR0cHM6Ly9naXRodWIuY29tL01pbmFEaU5hYmlsL3VwZGF0ZS5saW5rL2Jsb2IvbWFpbi9wcm9iZS5weQ==";
+
+        public override string SampleVersion => "a636ef8";
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("djJyYXktdmVyaWZpZWQuanNvbg==");
+
+        public override bool HasProtocol(ServerProtocol protocol) =>
+            protocol == ServerProtocol.SSH || protocol == ServerProtocol.V2Ray;
     }
 }
