@@ -132,7 +132,7 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMeme
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS50cnB0dW5uZWwueHl6";
 
-        public override string SampleVersion => "1.0.8";
+        public override string SampleVersion => "1.0.9";
 
         protected override string RepoName => Encoding.ASCII.FromBase64String("SmNhY2Fub2cxMi90cmluZXQtcHJvLXJlYm9ybi1hdXRv");
 
@@ -142,6 +142,8 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMeme
         {
             return protocol == ServerProtocol.OpenVPN || protocol == ServerProtocol.V2Ray || protocol == ServerProtocol.SSH;
         }
+
+        public override DateTime? PossiblyAbandoned => new DateTime(2026, 06, 25);
     }
 
     public sealed class ShMemeIzph : VPNProviderGithubRepoFileBase<ShMemeIzph.Parser>
@@ -183,11 +185,11 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMeme
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPWNvbS5penBocHJvdjIubmV0";
 
-        public override string SampleVersion => "1.0.8";
+        public override string SampleVersion => "5.2";
 
         protected override string RepoName => Encoding.ASCII.FromBase64String("a2lyYW5vYmxlL2NvbmZpZw==");
 
-        protected override string ConfigName => Encoding.ASCII.FromBase64String("aXpwaDIwMjY=");
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("aXpwaDQ5");
 
         public override bool HasProtocol(ServerProtocol protocol)
         {
@@ -234,11 +236,11 @@ namespace LibFreeVPN.Providers.SocksHttp.ShMeme
 
         public override string SampleSource => "aHR0cHM6Ly9wbGF5Lmdvb2dsZS5jb20vc3RvcmUvYXBwcy9kZXRhaWxzP2lkPW9yZy5paG9tZXZwbi54eXo=";
 
-        public override string SampleVersion => "2.6";
+        public override string SampleVersion => "3.2";
 
-        protected override string RepoName => Encoding.ASCII.FromBase64String("TUFLRS1NT05FWS1NSUxMSU9OLURPTExBUi1QRVItREFZLzduZXQtMTZrYlYy");
+        protected override string RepoName => Encoding.ASCII.FromBase64String("TUFLRS1NT05FWS1NSUxMSU9OLURPTExBUi1QRVItREFZL0lob21lLVRrLVZQbg==");
 
-        protected override string ConfigName => Encoding.ASCII.FromBase64String("N05FVC1Db3JlLmpz");
+        protected override string ConfigName => Encoding.ASCII.FromBase64String("aWhvbWUtdGslMjB2cG4uanM=");
 
         public override bool HasProtocol(ServerProtocol protocol)
         {
