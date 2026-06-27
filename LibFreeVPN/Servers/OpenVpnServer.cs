@@ -301,8 +301,5 @@ namespace LibFreeVPN.Servers
             thisConfig.Insert(serverIdx, string.Format("remote {0} {1}", hostname, port));
             return string.Join("\r\n", thisConfig.ToArray());
         }
-
-        public static string RemoveComments(string config)
-            => string.Join("\r\n", RemoveCommentsInternal(config));
     }
 }

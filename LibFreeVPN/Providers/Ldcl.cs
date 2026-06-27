@@ -135,7 +135,7 @@ namespace LibFreeVPN.Providers
 
                 if (!mainConfsObject.TryGetPropertyString("FileName", out var confName)) throw new InvalidDataException();
                 if (!mainConfsObject.TryGetPropertyString("File", out var conf)) throw new InvalidDataException();
-                conf = OpenVpnServer.RemoveComments(Encoding.UTF8.GetString(Convert.FromBase64String(conf)));
+                conf = Encoding.UTF8.GetString(Convert.FromBase64String(conf));
                 var registry = CreateExtraRegistry();
                 registry.Add(ServerRegistryKeys.DisplayName, confName);
                 registry.Add(ServerRegistryKeys.Country, country);

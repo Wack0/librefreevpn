@@ -168,7 +168,7 @@ namespace LibFreeVPN.Providers.T2F
                 switch (protocol)
                 {
                     case ServerProtocol.OpenVPN:
-                        return OpenVpnServer.ParseConfigFull(OpenVpnServer.RemoveComments(config), registry);
+                        return OpenVpnServer.ParseConfigFull(config, registry);
                     case ServerProtocol.WireGuard:
                         return WireGuardServer.ParseConfigFull(config, registry);
                     case ServerProtocol.V2Ray:
