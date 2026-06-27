@@ -56,20 +56,8 @@ namespace LibFreeVPN.Servers
 
             public override IEnumerable<(string config, string hostname, string port)> ParseConfigFull(string config)
             {
-                // take the config and split it by newline
-                var split = config.Split(ServerUtilities.NewLines, StringSplitOptions.None);
-
-                // remove all lines starting with comment
-                {
-                    var splitList = new List<string>();
-                    for (int i = 0; i < split.Length; i++)
-                    {
-                        var line = split[i];
-                        if (line.Length > 0 && line[0] == '#') continue;
-                        splitList.Add(line);
-                    }
-                    split = splitList.ToArray();
-                }
+                // split the config by newline and remove comments
+                var split = RemoveCommentsInternal(config);
 
                 // walk through the split config, and create "clean" config (with no servers), "servers" (containing just the servers), "server index" (arr index of first server)
                 var configClean = new List<string>();
@@ -246,7 +234,7 @@ namespace LibFreeVPN.Servers
 
         public override ServerProtocol Protocol => ServerProtocol.OpenVPN;
 
-        public static string InjectHostIntoConfig(string config, string hostname, string port)
+        private static string[] RemoveCommentsInternal(string config)
         {
             // take the config and split it by newline
             var split = config.Split(ServerUtilities.NewLines, StringSplitOptions.None);
@@ -262,6 +250,14 @@ namespace LibFreeVPN.Servers
                 }
                 split = splitList.ToArray();
             }
+
+            return split;
+        }
+
+        public static string InjectHostIntoConfig(string config, string hostname, string port)
+        {
+            // split the config by newline and remove comments
+            var split = RemoveCommentsInternal(config);
 
             // walk through the split config, and create "clean" config (with no servers), "servers" (containing just the servers), "server index" (arr index of first server)
             var configClean = new List<string>();
@@ -305,5 +301,8 @@ namespace LibFreeVPN.Servers
             thisConfig.Insert(serverIdx, string.Format("remote {0} {1}", hostname, port));
             return string.Join("\r\n", thisConfig.ToArray());
         }
+
+        public static string RemoveComments(string config)
+            => string.Join("\r\n", RemoveCommentsInternal(config));
     }
 }
