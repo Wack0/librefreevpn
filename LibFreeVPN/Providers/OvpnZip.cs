@@ -76,7 +76,7 @@ namespace LibFreeVPN.Providers.OvpnZip
                         {
                             await stream.ReadAsync(bytes, 0, bytes.Length);
                         }
-                        var conf = DecryptConf(bytes);
+                        var conf = OpenVpnServer.RemoveComments(DecryptConf(bytes));
                         list.Add(new KeyValuePair<string, string>(entry.Name, conf));
                     }
                     catch { }
