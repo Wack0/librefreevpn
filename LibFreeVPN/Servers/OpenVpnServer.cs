@@ -159,7 +159,7 @@ namespace LibFreeVPN.Servers
                     {
                         thisPort = splitServer[2];
                     }
-                    return (config, splitServer[1], thisPort).EnumerableSingle().ToList();
+                    return (string.Join("\r\n", split), splitServer[1], thisPort).EnumerableSingle().ToList();
                 }
 
                 // for each server, take a copy of the configClean, add the server in, yield return it
