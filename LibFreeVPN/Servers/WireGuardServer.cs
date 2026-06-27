@@ -66,8 +66,8 @@ namespace LibFreeVPN.Servers
                 if (count == 0) return Enumerable.Empty<(string config, string hostname, string port)>();
                 else if (count == 1)
                 {
-                    // Single Peer, just parse the whole thing
-                    return ParseConfigSingle(config).EnumerableSingle();
+                    // Single Peer, just parse the whole thing, ensure the newlines are normalised as they would be for multiple configs
+                    return ParseConfigSingle(string.Join("\r\n", config.Split(ServerUtilities.NewLines, StringSplitOptions.None))).EnumerableSingle();
                 }
 
                 // Multiple Peers
