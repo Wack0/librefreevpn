@@ -27,13 +27,17 @@ namespace LibFreeVPN
         /// </summary>
         WireGuard,
         /// <summary>
-        /// V2Ray (no matter the underlying protocol - vmess/vless/socks/...)
+        /// V2Ray (no matter the underlying protocol - vmess/vless/... - widely-supported socks/http(s) proxies should not be here)
         /// </summary>
         V2Ray,
         /// <summary>
         /// SSH tunnel
         /// </summary>
         SSH,
+        /// <summary>
+        /// HTTP/HTTPS/Socks5 proxy server
+        /// </summary>
+        WebProxy,
     }
 
     public static class ServerRegistryKeys
